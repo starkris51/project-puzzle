@@ -11,7 +11,6 @@ public static class PieceShapes
         new Cell[2, 2] { { new Cell(CellState.StartBlockEmpty, RotationState.Up), new Cell() }, { new Cell(), new Cell() } },
         new Cell[2, 2] { { new Cell(CellState.TwoWayPathBlockEmpty, RotationState.Up), new Cell() }, { new Cell(), new Cell() } },
         new Cell[2, 2] { { new Cell(CellState.TwoWayPathBlockEmpty), new Cell() }, { new Cell(CellState.TwoWayPathBlockEmpty), new Cell() } },
-        new Cell[2, 2] { { new Cell(CellState.ThreeWayPathBlockEmpty), new Cell(CellState.ThreeWayPathBlockEmpty, RotationState.Left) }, { new Cell(), new Cell() } },
     ];
 }
 

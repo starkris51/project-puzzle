@@ -109,188 +109,88 @@ public class Grid : IGameObject
         }
     }
 
+    private static (int dx, int dy)[] GetOpenings(Cell cell)
+    {
+        switch (cell.State)
+        {
+            case CellState.StartBlockEmpty:
+            case CellState.StartBlockConnected:
+                return cell.Rotation switch
+                {
+                    RotationState.Up => [(0, -1)],
+                    RotationState.Down => [(0, 1)],
+                    RotationState.Left => [(-1, 0)],
+                    RotationState.Right => [(1, 0)],
+                    _ => []
+                };
+            case CellState.TwoWayPathBlockEmpty:
+            case CellState.TwoWayPathBlockConnected:
+                return cell.Rotation == RotationState.Up || cell.Rotation == RotationState.Down
+                    ? [(0, -1), (0, 1)]
+                    : [(-1, 0), (1, 0)];
+            default:
+                return [];
+        }
+    }
+
+    private static bool IsStart(Cell c) =>
+        c.State is CellState.StartBlockEmpty or CellState.StartBlockConnected;
+
     public void CheckConnections()
     {
-        List<Cell> connectedCells = [];
-
         for (int x = 0; x < Width; x++)
             for (int y = 0; y < Height; y++)
                 cells[x, y].Disconnect();
 
-        for (int x = 0; x < Width; x++)
-            for (int y = 0; y < Height; y++)
-            {
-                if (cells[x, y].State == CellState.StartBlockEmpty)
-                {
-                    Cell self = cells[x, y];
-                    switch (cells[x, y].Rotation)
-                    {
-                        case RotationState.Up:
-                            if (y - 1 < 0) break;
-                            Cell topCell = cells[x, y - 1];
-
-                            if (topCell.State == CellState.StartBlockEmpty && topCell.Rotation == RotationState.Down)
-                            {
-                                connectedCells.Add(topCell);
-                                self.Connect();
-                            }
-                            else if (topCell.State == CellState.TwoWayPathBlockEmpty && (topCell.Rotation == RotationState.Up || topCell.Rotation == RotationState.Down))
-                            {
-                                connectedCells.Add(topCell);
-                                self.Connect();
-                            }
-                            // else if (topCell.State == CellState.ThreeWayPathBlockEmpty && (topCell.Rotation == RotationState.Left || topCell.Rotation == RotationState.Right))
-                            // {
-                            //     connectedCells.Add(topCell);
-                            //     self.Connect();
-                            // }
-                            // else if (topCell.State == CellState.FourWayPathBlockEmpty)
-                            // {
-                            //     connectedCells.Add(topCell);
-                            //     self.Connect();
-                            // }
-
-                            break;
-                        case RotationState.Down:
-                            if (y + 1 >= Height) break;
-                            Cell bottomCell = cells[x, y + 1];
-
-                            if (bottomCell.State == CellState.StartBlockEmpty && bottomCell.Rotation == RotationState.Up)
-                            {
-                                connectedCells.Add(bottomCell);
-                                self.Connect();
-                            }
-                            else if (bottomCell.State == CellState.TwoWayPathBlockEmpty && (bottomCell.Rotation == RotationState.Up || bottomCell.Rotation == RotationState.Down))
-                            {
-                                connectedCells.Add(bottomCell);
-                                self.Connect();
-                            }
-                            // else if (bottomCell.State == CellState.ThreeWayPathBlockEmpty && (bottomCell.Rotation == RotationState.Left || bottomCell.Rotation == RotationState.Right))
-                            // {
-                            //     connectedCells.Add(bottomCell);
-                            //     self.Connect();
-                            // }
-                            // else if (bottomCell.State == CellState.FourWayPathBlockEmpty)
-                            // {
-                            //     connectedCells.Add(bottomCell);
-                            //     self.Connect();
-                            // }
-
-                            break;
-                        case RotationState.Left:
-                            if (x - 1 < 0) break;
-                            Cell leftCell = cells[x - 1, y];
-
-                            if (leftCell.State == CellState.StartBlockEmpty && leftCell.Rotation == RotationState.Right)
-                            {
-                                connectedCells.Add(leftCell);
-                                self.Connect();
-                            }
-                            else if (leftCell.State == CellState.TwoWayPathBlockEmpty && (leftCell.Rotation == RotationState.Left || leftCell.Rotation == RotationState.Right))
-                            {
-                                connectedCells.Add(leftCell);
-                                self.Connect();
-                            }
-                            // else if (leftCell.State == CellState.ThreeWayPathBlockEmpty && (leftCell.Rotation == RotationState.Up || leftCell.Rotation == RotationState.Down))
-                            // {
-                            //     connectedCells.Add(leftCell);
-                            //     self.Connect();
-                            // }
-                            // else if (leftCell.State == CellState.FourWayPathBlockEmpty)
-                            // {
-                            //     connectedCells.Add(leftCell);
-                            //     self.Connect();
-                            // }
-
-                            break;
-
-                        case RotationState.Right:
-                            if (x + 1 >= Width) break;
-                            Cell rightCell = cells[x + 1, y];
-
-                            if (rightCell.State == CellState.StartBlockEmpty && rightCell.Rotation == RotationState.Left)
-                            {
-                                connectedCells.Add(rightCell);
-                                self.Connect();
-                            }
-                            else if (rightCell.State == CellState.TwoWayPathBlockEmpty && (rightCell.Rotation == RotationState.Left || rightCell.Rotation == RotationState.Right))
-                            {
-                                connectedCells.Add(rightCell);
-                                self.Connect();
-                            }
-                            // else if (rightCell.State == CellState.ThreeWayPathBlockEmpty && (rightCell.Rotation == RotationState.Up || rightCell.Rotation == RotationState.Down))
-                            // {
-                            //     connectedCells.Add(rightCell);
-                            //     self.Connect();
-                            // }
-                            // else if (rightCell.State == CellState.FourWayPathBlockEmpty)
-                            // {
-                            //     connectedCells.Add(rightCell);
-                            //     self.Connect();
-                            // }
-                            break;
-                    }
-                }
-            }
-
-        while (connectedCells.Count > 0)
+        for (int sx = 0; sx < Width; sx++)
         {
-            List<Cell> nextCells = [];
-
-            foreach (Cell cell in connectedCells)
+            for (int sy = 0; sy < Height; sy++)
             {
-                cell.Connect();
-                int x = cell.X;
-                int y = cell.Y;
+                Cell start = cells[sx, sy];
+                if (!IsStart(start)) continue;
 
-                switch (cell.State)
+                var openings = GetOpenings(start);
+                if (openings.Length == 0) continue;
+
+                List<Cell> path = [start];
+                int prevX = sx, prevY = sy;
+                int cx = sx + openings[0].dx, cy = sy + openings[0].dy;
+                bool reachedStart = false;
+
+                while (cx >= 0 && cx < Width && cy >= 0 && cy < Height)
                 {
-                    case CellState.TwoWayPathBlockConnected:
+                    Cell next = cells[cx, cy];
+                    var nextOpenings = GetOpenings(next);
 
-                        if (cell.Rotation == RotationState.Up || cell.Rotation == RotationState.Down)
-                        {
-                            if (y - 1 >= 0)
-                            {
-                                Cell topCell = cells[x, y - 1];
-                                if (topCell.State == CellState.TwoWayPathBlockEmpty)
-                                {
-                                    nextCells.Add(topCell);
-                                }
-                            }
-                            if (y + 1 < Height)
-                            {
-                                Cell bottomCell = cells[x, y + 1];
-                                if (bottomCell.State == CellState.TwoWayPathBlockEmpty)
-                                {
-                                    nextCells.Add(bottomCell);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (x - 1 >= 0)
-                            {
-                                Cell leftCell = cells[x - 1, y];
-                                if (leftCell.State == CellState.TwoWayPathBlockEmpty && leftCell.Rotation == RotationState.Left)
-                                {
-                                    nextCells.Add(leftCell);
-                                }
-                            }
-                            if (x + 1 < Width)
-                            {
-                                Cell rightCell = cells[x + 1, y];
-                                if (rightCell.State == CellState.TwoWayPathBlockEmpty && rightCell.Rotation == RotationState.Right)
-                                {
-                                    nextCells.Add(rightCell);
-                                }
-                            }
-                        }
+                    bool connectsBack = false;
+                    foreach (var (ndx, ndy) in nextOpenings)
+                    {
+                        if (cx + ndx == prevX && cy + ndy == prevY) { connectsBack = true; break; }
+                    }
+                    if (!connectsBack) break;
 
-                        break;
+                    path.Add(next);
+
+                    if (IsStart(next)) { reachedStart = true; break; }
+
+                    int odx = 0, ody = 0;
+                    bool found = false;
+                    foreach (var (ndx, ndy) in nextOpenings)
+                    {
+                        if (cx + ndx == prevX && cy + ndy == prevY) continue;
+                        odx = ndx; ody = ndy; found = true; break;
+                    }
+                    if (!found) break;
+
+                    prevX = cx; prevY = cy;
+                    cx += odx; cy += ody;
+                }
+
+                if (reachedStart)
+                {
+                    foreach (Cell c in path) c.Connect();
                 }
             }
-
-            connectedCells = nextCells;
         }
     }
 
