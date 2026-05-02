@@ -98,6 +98,9 @@ public class Cell
         }
     }
 
+    public int X { get; set; }
+    public int Y { get; set; }
+
     public void Connect()
     {
         State = CellHelpers.ToConnected(State);
@@ -108,7 +111,7 @@ public class Cell
         State = CellHelpers.ToDisconnected(State);
     }
 
-
+    public bool IsConnected() => CellHelpers.IsConnected(State);
 
     public RotationState Rotation = RotationState.Up;
     public Rectangle SourceRect;
