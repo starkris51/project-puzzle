@@ -2,8 +2,6 @@
 using System;
 using Microsoft.Xna.Framework;
 
-public enum RotationState { Up = -90, Right = 0, Down = 90, Left = 180 }
-
 public static class CellTexture
 {
     public const int CellSize = 32;
@@ -62,10 +60,9 @@ public static class CellHelpers
 
 public class Cell
 {
-    public Cell(CellState state = CellState.Empty, RotationState rotation = RotationState.Up)
+    public Cell(CellState state = CellState.Empty)
     {
         State = state;
-        Rotation = rotation;
         SourceRect = UpdateSourceRect();
     }
 
@@ -113,7 +110,6 @@ public class Cell
 
     public bool IsConnected() => CellHelpers.IsConnected(State);
 
-    public RotationState Rotation = RotationState.Up;
     public Rectangle SourceRect;
 }
 

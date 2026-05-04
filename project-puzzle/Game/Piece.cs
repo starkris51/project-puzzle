@@ -8,9 +8,6 @@ public static class PieceShapes
 {
     public static readonly Cell[][,] All =
     [
-        new Cell[2, 2] { { new Cell(CellState.StartBlockEmpty, RotationState.Up), new Cell() }, { new Cell(), new Cell() } },
-        new Cell[2, 2] { { new Cell(CellState.TwoWayPathBlockEmpty, RotationState.Up), new Cell() }, { new Cell(), new Cell() } },
-        new Cell[2, 2] { { new Cell(CellState.TwoWayPathBlockEmpty), new Cell() }, { new Cell(CellState.TwoWayPathBlockEmpty), new Cell() } },
     ];
 }
 
@@ -66,8 +63,7 @@ public class Piece : IGameObject
                 Cell src = matrix[i, j];
                 if (src.State != CellState.Empty)
                 {
-                    RotationState newRot = (RotationState)(((int)src.Rotation + 90) % 360);
-                    rotated[j, rows - 1 - i] = new Cell(src.State, newRot);
+                    rotated[j, rows - 1 - i] = new Cell(src.State);
                 }
                 else
                 {
@@ -129,9 +125,8 @@ public class Piece : IGameObject
                     Rectangle sourceRect = cell.SourceRect;
                     int drawX = pixelX + i * _grid.CellSize;
                     int drawY = pixelY + j * _grid.CellSize;
-                    int rotation = (int)cell.Rotation;
                     Vector2 origin = new(_grid.CellSize / 2, _grid.CellSize / 2);
-                    spriteBatch.Draw(_texture, new Rectangle(drawX + _grid.CellSize / 2, drawY + _grid.CellSize / 2, _grid.CellSize, _grid.CellSize), sourceRect, Color.White, rotation * (float)(Math.PI / 180), origin, SpriteEffects.None, 0f);
+                    spriteBatch.Draw(_texture, new Rectangle(drawX + _grid.CellSize / 2, drawY + _grid.CellSize / 2, _grid.CellSize, _grid.CellSize), sourceRect, Color.White, 0f, origin, SpriteEffects.None, 0f);
                 }
             }
         }
