@@ -21,7 +21,7 @@ public class Piece : IGameObject
     {
         _texture = texture;
         _grid = grid;
-        x = grid.Width / 2;
+        x = (grid.Width / 2) - 1;
         y = 0;
         matrix = shape ?? PieceShapes.All[0];
 
@@ -41,11 +41,14 @@ public class Piece : IGameObject
     public event Action OnLocked;
     public event Action OnSpawned;
     public event Action OnMoved;
+    public event Action OnRotated;
 
     private bool TryMove(int dx, int dy)
     {
         int newX = x + dx;
         int newY = y + dy;
+
+        if (dx == 1 || dx == -1) SoundManager.Play(Sounds.MovePiece);
 
         if (!_grid.IsValidPosition(newX, newY, matrix)) return false;
 
@@ -78,6 +81,8 @@ public class Piece : IGameObject
         if (!_grid.IsValidPosition(x, y, rotated)) return false;
 
         matrix = rotated;
+        OnRotated?.Invoke();
+        SoundManager.Play(Sounds.Rotate);
         return true;
     }
 
@@ -86,6 +91,7 @@ public class Piece : IGameObject
         _grid.PlacePiece(x, y, matrix);
 
         OnLocked?.Invoke();
+        // SoundManager.Play(Sounds.PlacePiece); --- IGNORE ---
     }
 
     public void Update(GameTime gameTime)
@@ -107,7 +113,6 @@ public class Piece : IGameObject
         }
         if (KeyboardInfo.WasKeyJustPressed(Keys.Space))
         {
-            while (TryMove(0, 1)) { }
             Lock();
         }
         if (KeyboardInfo.WasKeyJustPressed(Keys.R) || KeyboardInfo.WasKeyJustPressed(Keys.Up))

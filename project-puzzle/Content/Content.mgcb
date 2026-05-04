@@ -61,3 +61,51 @@
 /processorParam:TextureFormat=Color
 /build:PuzzleGameTestTileset4.png;TilesetV4.png
 
+#begin Sounds/ClearMatch.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/ClearMatch.wav
+
+#begin Sounds/Enter.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/Enter.wav
+
+#begin Sounds/Fall.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/Fall.wav
+
+#begin Sounds/Hold.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/Hold.wav
+
+#begin Sounds/MovePiece.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/MovePiece.wav
+
+#begin Sounds/PlacePiece.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/PlacePiece.wav
+
+#begin Sounds/Rotate.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/Rotate.wav
+
+#begin Sounds/Select.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/Select.wav
+

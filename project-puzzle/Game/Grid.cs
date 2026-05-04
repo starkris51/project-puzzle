@@ -221,6 +221,7 @@ public class Grid : IGameObject
                 {
                     _phaseTimer = 0;
                     bool moved = ApplyGravityOneStep();
+                    SoundManager.Play(Sounds.Fall);
                     if (!moved)
                         _phase = GridPhase.Clearing;
                 }
@@ -230,6 +231,7 @@ public class Grid : IGameObject
                 bool hadMatches = MarkMatches();
                 if (hadMatches)
                 {
+                    SoundManager.Play(Sounds.ClearMatch);
                     _phase = GridPhase.WaitingAfterClear;
                     _phaseTimer = 0;
                 }
