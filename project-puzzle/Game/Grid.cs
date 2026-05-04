@@ -32,7 +32,10 @@ public class Grid : IGameObject
     private const double GravityStepDelay = 0.05;
     private const double ClearDelay = 0.4;
 
-    public bool IsAnimating => _phase != GridPhase.Playing;
+    public bool IsAnimating => _phase != GridPhase.Playing && _phase != GridPhase.GameOver;
+    public bool IsGameOver => _phase == GridPhase.GameOver;
+
+    public event Action OnGameOver;
 
     private readonly Cell[,] cells;
 
@@ -44,13 +47,7 @@ public class Grid : IGameObject
         _screenHeight = screenHeight;
 
         cells = new Cell[Width, Height];
-        for (int x = 0; x < Width; x++)
-        {
-            for (int y = 0; y < Height; y++)
-            {
-                cells[x, y] = new Cell();
-            }
-        }
+        Reset();
     }
 
     public bool IsCellEmpty(int x, int y)
@@ -135,7 +132,7 @@ public class Grid : IGameObject
             for (int y = Height - 1; y >= 0; y--)
             {
                 Cell cell = cells[x, y];
-                if (cell.State == CellState.Empty || cell.State == CellState.Placeholder || cell.IsClearing) continue;
+                if (cell.State == CellState.Empty || cell.State == CellState.Placeholder || cell.State == CellState.Invisible || cell.IsClearing) continue;
 
                 var results = cell.CheckNeighborStates(cells, x, y);
                 if (results.Count == 0) continue;
@@ -235,6 +232,11 @@ public class Grid : IGameObject
                     _phase = GridPhase.WaitingAfterClear;
                     _phaseTimer = 0;
                 }
+                else if (CheckGameOver())
+                {
+                    _phase = GridPhase.GameOver;
+                    OnGameOver?.Invoke();
+                }
                 else
                 {
                     _phase = GridPhase.Playing;
@@ -252,6 +254,38 @@ public class Grid : IGameObject
         }
     }
 
+    private bool CheckGameOver()
+    {
+        int threshold = 1;
+        for (int x = 0; x < Width; x++)
+        {
+            if (cells[x, threshold].State != CellState.Empty)
+                return true;
+        }
+        return false;
+    }
+
+    public void Reset()
+    {
+        for (int x = 0; x < Width; x++)
+        {
+            for (int y = 0; y < Height; y++)
+            {
+                cells[x, y] = new Cell();
+            }
+        }
+
+        cells[0, Height - 1] = new Cell(CellState.Invisible);
+        cells[0, Height - 2] = new Cell(CellState.Invisible);
+        cells[1, Height - 1] = new Cell(CellState.Invisible);
+        cells[Width - 1, Height - 1] = new Cell(CellState.Invisible);
+        cells[Width - 1, Height - 2] = new Cell(CellState.Invisible);
+        cells[Width - 2, Height - 1] = new Cell(CellState.Invisible);
+
+        _phase = GridPhase.Playing;
+        _phaseTimer = 0;
+    }
+
     public void Draw(SpriteBatch spriteBatch)
     {
         // Draw background
@@ -259,6 +293,8 @@ public class Grid : IGameObject
         {
             for (int y = 0; y < Height; y++)
             {
+                if (cells[x, y].State == CellState.Invisible) continue;
+
                 Vector2 origin = new(CellSize / 2, CellSize / 2);
                 spriteBatch.Draw(_texture, new Rectangle(OffsetX + x * CellSize + CellSize / 2, OffsetY + y * CellSize + CellSize / 2, CellSize, CellSize), CellTexture.Empty, Color.White, 0f, origin, SpriteEffects.None, 0f);
             }

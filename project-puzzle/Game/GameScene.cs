@@ -26,6 +26,7 @@ public class GameScene(ContentManager content) : IScene
         tileset = _content.Load<Texture2D>("TilesetV4");
 
         grid = new Grid(tileset, 800, 600);
+        grid.OnGameOver += Restart;
         SpawnPiece();
     }
 
@@ -35,10 +36,19 @@ public class GameScene(ContentManager content) : IScene
         _content.Unload();
     }
 
+    private void Restart()
+    {
+        grid.Reset();
+        SpawnPiece();
+    }
+
     public void Update(GameTime gameTime)
     {
         KeyboardInfo.Update();
         grid.Update(gameTime);
+
+        if (grid.IsGameOver) return;
+
         piece.Update(gameTime);
     }
 

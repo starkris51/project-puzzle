@@ -9,6 +9,7 @@ public static class CellTexture
 
     public static readonly Rectangle Empty = new(0, 0, 32, 32);
     public static readonly Rectangle Placeholder = new(32, 0, 32, 32);
+    public static readonly Rectangle Invisible = new(0, 32, 32, 32);
     public static readonly Rectangle Symbol1 = new(64, 0, 32, 32);
     public static readonly Rectangle Symbol2 = new(96, 0, 32, 32);
     public static readonly Rectangle Symbol3 = new(96, 32, 32, 32);
@@ -18,6 +19,7 @@ public enum CellState
 {
     Empty,
     Placeholder,
+    Invisible,
     Symbol1,
     Symbol2,
     Symbol3
@@ -58,6 +60,7 @@ public class Cell
         {
             CellState.Empty => CellTexture.Empty,
             CellState.Placeholder => CellTexture.Placeholder,
+            CellState.Invisible => CellTexture.Invisible,
             CellState.Symbol1 => CellTexture.Symbol1,
             CellState.Symbol2 => CellTexture.Symbol2,
             CellState.Symbol3 => CellTexture.Symbol3,
