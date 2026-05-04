@@ -14,8 +14,8 @@ public enum GridPhase
 
 public class Grid : IGameObject
 {
-    public int Width = 6;
-    public int Height = 12;
+    public int Width = 8;
+    public int Height = 14;
 
     public int CellSize = 32;
 
@@ -111,7 +111,7 @@ public class Grid : IGameObject
         {
             for (int y = Height - 2; y >= 0; y--)
             {
-                if (cells[x, y].State == CellState.Empty || cells[x, y].IsClearing) continue;
+                if (cells[x, y].State == CellState.Empty || cells[x, y].State == CellState.Invisible || cells[x, y].IsClearing) continue;
                 if (cells[x, y + 1].State == CellState.Empty)
                 {
                     cells[x, y + 1] = cells[x, y];
@@ -281,6 +281,9 @@ public class Grid : IGameObject
         cells[Width - 1, Height - 1] = new Cell(CellState.Invisible);
         cells[Width - 1, Height - 2] = new Cell(CellState.Invisible);
         cells[Width - 2, Height - 1] = new Cell(CellState.Invisible);
+
+        cells[0, 0] = new Cell(CellState.Invisible);
+        cells[Width - 1, 0] = new Cell(CellState.Invisible);
 
         _phase = GridPhase.Playing;
         _phaseTimer = 0;

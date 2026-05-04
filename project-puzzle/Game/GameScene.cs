@@ -25,7 +25,7 @@ public class GameScene(ContentManager content) : IScene
     {
         tileset = _content.Load<Texture2D>("TilesetV4");
 
-        grid = new Grid(tileset, 800, 600);
+        grid = new Grid(tileset, 960, 540);
         grid.OnGameOver += Restart;
         SpawnPiece();
     }

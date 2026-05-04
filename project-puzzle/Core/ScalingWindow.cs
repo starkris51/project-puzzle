@@ -61,12 +61,12 @@ public class ScalingWindow
         int windowWidth = _graphics.GraphicsDevice.PresentationParameters.BackBufferWidth;
         int windowHeight = _graphics.GraphicsDevice.PresentationParameters.BackBufferHeight;
 
-        float scale = MathF.Min(
-            (float)windowWidth / VirtualWidth,
-            (float)windowHeight / VirtualHeight);
+        int scale = Math.Max(1, Math.Min(
+            windowWidth / VirtualWidth,
+            windowHeight / VirtualHeight));
 
-        int scaledWidth = (int)(VirtualWidth * scale);
-        int scaledHeight = (int)(VirtualHeight * scale);
+        int scaledWidth = VirtualWidth * scale;
+        int scaledHeight = VirtualHeight * scale;
 
         _destinationRect = new Rectangle(
             (windowWidth - scaledWidth) / 2,
