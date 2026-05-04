@@ -115,10 +115,24 @@ public class Grid : IGameObject
 
     public void Draw(SpriteBatch spriteBatch)
     {
+        // Draw background
         for (int x = 0; x < Width; x++)
         {
             for (int y = 0; y < Height; y++)
             {
+                Vector2 origin = new(CellSize / 2, CellSize / 2);
+                spriteBatch.Draw(_texture, new Rectangle(OffsetX + x * CellSize + CellSize / 2, OffsetY + y * CellSize + CellSize / 2, CellSize, CellSize), CellTexture.Empty, Color.White, 0f, origin, SpriteEffects.None, 0f);
+            }
+        }
+
+        // Draw cells
+
+        for (int x = 0; x < Width; x++)
+        {
+            for (int y = 0; y < Height; y++)
+            {
+                if (cells[x, y].State == CellState.Empty) continue;
+
                 Cell cell = cells[x, y];
                 Vector2 origin = new(CellSize / 2, CellSize / 2);
                 spriteBatch.Draw(_texture, new Rectangle(OffsetX + x * CellSize + CellSize / 2, OffsetY + y * CellSize + CellSize / 2, CellSize, CellSize), cell.SourceRect, Color.White, 0f, origin, SpriteEffects.None, 0f);
