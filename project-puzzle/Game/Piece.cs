@@ -90,6 +90,8 @@ public class Piece : IGameObject
 
     public void Update(GameTime gameTime)
     {
+        if (_grid.IsAnimating) return;
+
         fallTimer += gameTime.ElapsedGameTime.TotalSeconds;
         if (fallTimer >= fallInterval)
         {

@@ -1,23 +1,38 @@
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+public enum GridPhase
+{
+    Playing,
+    Gravity,
+    Clearing,
+    WaitingAfterClear,
+    GameOver
+}
 
 public class Grid : IGameObject
 {
-    public int Width = 15;
-    public int Height = 15;
+    public int Width = 6;
+    public int Height = 12;
 
     public int CellSize = 32;
 
-    private int _screenWidth;
-    private int _screenHeight;
+    private readonly int _screenWidth;
+    private readonly int _screenHeight;
 
     public int OffsetX => (_screenWidth - Width * CellSize) / 2;
     public int OffsetY => (_screenHeight - Height * CellSize) / 2;
 
     private readonly Texture2D _texture;
+
+    private GridPhase _phase = GridPhase.Playing;
+    private double _phaseTimer = 0;
+    private const double GravityStepDelay = 0.05;
+    private const double ClearDelay = 0.4;
+
+    public bool IsAnimating => _phase != GridPhase.Playing;
 
     private readonly Cell[,] cells;
 
@@ -88,26 +103,105 @@ public class Grid : IGameObject
                 }
             }
         }
-        ApplyGravity();
+        _phase = GridPhase.Gravity;
+        _phaseTimer = 0;
     }
 
-    public void ApplyGravity()
+    private bool ApplyGravityOneStep()
     {
+        bool moved = false;
         for (int x = 0; x < Width; x++)
         {
             for (int y = Height - 2; y >= 0; y--)
             {
-                if (cells[x, y].State == CellState.Empty) continue;
-
-                int dropY = y;
-                while (dropY < Height - 1 && cells[x, dropY + 1].State == CellState.Empty)
+                if (cells[x, y].State == CellState.Empty || cells[x, y].IsClearing) continue;
+                if (cells[x, y + 1].State == CellState.Empty)
                 {
-                    dropY++;
+                    cells[x, y + 1] = cells[x, y];
+                    cells[x, y] = new Cell();
+                    moved = true;
+                }
+            }
+        }
+        return moved;
+    }
+
+    private bool MarkMatches()
+    {
+        bool found = false;
+
+        for (int x = 0; x < Width; x++)
+        {
+            for (int y = Height - 1; y >= 0; y--)
+            {
+                Cell cell = cells[x, y];
+                if (cell.State == CellState.Empty || cell.State == CellState.Placeholder || cell.IsClearing) continue;
+
+                var results = cell.CheckNeighborStates(cells, x, y);
+                if (results.Count == 0) continue;
+
+                bool cleared = false;
+
+                foreach (var (direction, state) in results)
+                {
+                    List<Cell> matched = [];
+
+                    if (direction == Direction.Up)
+                    {
+                        for (int i = y - 1; i >= 0; i--)
+                        {
+                            if (cells[x, i].State == state && !cells[x, i].IsClearing) matched.Add(cells[x, i]);
+                            else break;
+                        }
+                    }
+                    else if (direction == Direction.Down)
+                    {
+                        for (int i = y + 1; i < Height; i++)
+                        {
+                            if (cells[x, i].State == state && !cells[x, i].IsClearing) matched.Add(cells[x, i]);
+                            else break;
+                        }
+                    }
+                    else if (direction == Direction.Left)
+                    {
+                        for (int i = x - 1; i >= 0; i--)
+                        {
+                            if (cells[i, y].State == state && !cells[i, y].IsClearing) matched.Add(cells[i, y]);
+                            else break;
+                        }
+                    }
+                    else if (direction == Direction.Right)
+                    {
+                        for (int i = x + 1; i < Width; i++)
+                        {
+                            if (cells[i, y].State == state && !cells[i, y].IsClearing) matched.Add(cells[i, y]);
+                            else break;
+                        }
+                    }
+
+                    if (matched.Count >= 3)
+                    {
+                        foreach (Cell c in matched) c.IsClearing = true;
+                        cleared = true;
+                        found = true;
+                    }
                 }
 
-                if (dropY != y)
+                if (cleared) cell.IsClearing = true;
+            }
+        }
+
+        return found;
+    }
+
+    private void RemoveMarkedCells()
+    {
+        for (int x = 0; x < Width; x++)
+        {
+            for (int y = 0; y < Height; y++)
+            {
+                if (cells[x, y].IsClearing)
                 {
-                    cells[x, dropY] = cells[x, y];
                     cells[x, y] = new Cell();
                 }
             }
@@ -116,7 +210,44 @@ public class Grid : IGameObject
 
     public void Update(GameTime gameTime)
     {
-        // Update grid logic here if needed
+        if (_phase == GridPhase.Playing) return;
+
+        _phaseTimer += gameTime.ElapsedGameTime.TotalSeconds;
+
+        switch (_phase)
+        {
+            case GridPhase.Gravity:
+                if (_phaseTimer >= GravityStepDelay)
+                {
+                    _phaseTimer = 0;
+                    bool moved = ApplyGravityOneStep();
+                    if (!moved)
+                        _phase = GridPhase.Clearing;
+                }
+                break;
+
+            case GridPhase.Clearing:
+                bool hadMatches = MarkMatches();
+                if (hadMatches)
+                {
+                    _phase = GridPhase.WaitingAfterClear;
+                    _phaseTimer = 0;
+                }
+                else
+                {
+                    _phase = GridPhase.Playing;
+                }
+                break;
+
+            case GridPhase.WaitingAfterClear:
+                if (_phaseTimer >= ClearDelay)
+                {
+                    RemoveMarkedCells();
+                    _phase = GridPhase.Gravity;
+                    _phaseTimer = 0;
+                }
+                break;
+        }
     }
 
     public void Draw(SpriteBatch spriteBatch)
@@ -141,7 +272,8 @@ public class Grid : IGameObject
 
                 Cell cell = cells[x, y];
                 Vector2 origin = new(CellSize / 2, CellSize / 2);
-                spriteBatch.Draw(_texture, new Rectangle(OffsetX + x * CellSize + CellSize / 2, OffsetY + y * CellSize + CellSize / 2, CellSize, CellSize), cell.SourceRect, Color.White, 0f, origin, SpriteEffects.None, 0f);
+                Color tint = cell.IsClearing ? Color.White * 0.4f : Color.White;
+                spriteBatch.Draw(_texture, new Rectangle(OffsetX + x * CellSize + CellSize / 2, OffsetY + y * CellSize + CellSize / 2, CellSize, CellSize), cell.SourceRect, tint, 0f, origin, SpriteEffects.None, 0f);
             }
         }
     }

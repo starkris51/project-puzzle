@@ -1,5 +1,6 @@
 // List of rectangles for the tileset
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
 public static class CellTexture
@@ -24,11 +25,27 @@ public enum CellState
 
 public static class CellHelpers
 {
+    // Symbol1 beats symbol2, symbol2 beats symbol3, symbol3 beats symbol1
+    public static bool Beats(this CellState a, CellState b)
+    {
+        return (a == CellState.Symbol1 && b == CellState.Symbol2) ||
+               (a == CellState.Symbol2 && b == CellState.Symbol3) ||
+               (a == CellState.Symbol3 && b == CellState.Symbol1);
+    }
+}
 
+public enum Direction
+{
+    Up,
+    Down,
+    Left,
+    Right
 }
 
 public class Cell
 {
+    public bool IsClearing { get; set; }
+
     public Cell(CellState state = CellState.Empty)
     {
         State = state;
@@ -63,5 +80,22 @@ public class Cell
     public int Y { get; set; }
 
     public Rectangle SourceRect;
+
+    public void Clear()
+    {
+        State = CellState.Empty;
+    }
+
+    public List<(Direction, CellState)> CheckNeighborStates(Cell[,] grid, int x, int y)
+    {
+        List<(Direction, CellState)> results = [];
+
+        if (y > 0 && State.Beats(grid[x, y - 1].State)) results.Add((Direction.Up, grid[x, y - 1].State));
+        if (y < grid.GetLength(1) - 1 && State.Beats(grid[x, y + 1].State)) results.Add((Direction.Down, grid[x, y + 1].State));
+        if (x > 0 && State.Beats(grid[x - 1, y].State)) results.Add((Direction.Left, grid[x - 1, y].State));
+        if (x < grid.GetLength(0) - 1 && State.Beats(grid[x + 1, y].State)) results.Add((Direction.Right, grid[x + 1, y].State));
+
+        return results;
+    }
 }
 
