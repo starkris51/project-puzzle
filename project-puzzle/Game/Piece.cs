@@ -8,7 +8,10 @@ public static class PieceShapes
 {
     public static readonly Cell[][,] All =
     [
-        new Cell[1,1] { { new Cell(CellState.Placeholder) } },
+        new Cell[,] { { new Cell(CellState.Symbol1), new Cell(CellState.Symbol1) },
+                      { new Cell(CellState.Symbol2), new Cell(CellState.Symbol2) } },
+        new Cell[,] { { new Cell(CellState.Symbol3), new Cell(CellState.Symbol3) },
+                      { new Cell(), new Cell(CellState.Symbol1) } },
     ];
 }
 

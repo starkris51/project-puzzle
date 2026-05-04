@@ -20,7 +20,7 @@ public class Game1 : Game
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
 
-        _scalingWindow = new ScalingWindow(_graphics, Window, 1280, 720);
+        _scalingWindow = new ScalingWindow(_graphics, Window, 800, 600);
     }
 
     protected override void Initialize()

@@ -23,9 +23,9 @@ public class GameScene(ContentManager content) : IScene
 
     public void Load()
     {
-        tileset = _content.Load<Texture2D>("TilesetV3");
+        tileset = _content.Load<Texture2D>("TilesetV4");
 
-        grid = new Grid(tileset);
+        grid = new Grid(tileset, 800, 600);
         SpawnPiece();
     }
 

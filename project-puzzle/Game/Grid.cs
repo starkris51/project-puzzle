@@ -11,16 +11,22 @@ public class Grid : IGameObject
 
     public int CellSize = 32;
 
-    public int OffsetX = 200;
-    public int OffsetY = 100;
+    private int _screenWidth;
+    private int _screenHeight;
+
+    public int OffsetX => (_screenWidth - Width * CellSize) / 2;
+    public int OffsetY => (_screenHeight - Height * CellSize) / 2;
 
     private readonly Texture2D _texture;
 
     private readonly Cell[,] cells;
 
-    public Grid(Texture2D texture)
+    public Grid(Texture2D texture, int screenWidth, int screenHeight)
     {
         _texture = texture;
+
+        _screenWidth = screenWidth;
+        _screenHeight = screenHeight;
 
         cells = new Cell[Width, Height];
         for (int x = 0; x < Width; x++)
