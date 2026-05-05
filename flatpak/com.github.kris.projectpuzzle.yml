@@ -2,8 +2,6 @@ app-id: com.github.kris.projectpuzzle
 runtime: org.freedesktop.Platform
 runtime-version: "24.08"
 sdk: org.freedesktop.Sdk
-sdk-extensions:
-  - org.freedesktop.Sdk.Extension.dotnet9
 command: project-puzzle
 finish-args:
   - --socket=x11
@@ -15,14 +13,10 @@ finish-args:
 modules:
   - name: project-puzzle
     buildsystem: simple
-    build-options:
-      append-path: /usr/lib/sdk/dotnet9/bin
-      append-ld-library-path: /usr/lib/sdk/dotnet9/lib
-      env:
-        DOTNET_CLI_TELEMETRY_OPTOUT: "1"
-        DOTNET_NOLOGO: "1"
     build-commands:
-      - dotnet publish project-puzzle/project-puzzle.csproj -c Release -r linux-x64 --self-contained -o /app/bin
+      - install -d /app/bin
+      - cp -r publish/linux/* /app/bin/
+      - chmod +x /app/bin/project-puzzle
       - install -Dm644 flatpak/com.github.kris.projectpuzzle.desktop /app/share/applications/com.github.kris.projectpuzzle.desktop
       - install -Dm644 flatpak/com.github.kris.projectpuzzle.metainfo.xml /app/share/metainfo/com.github.kris.projectpuzzle.metainfo.xml
       - install -Dm644 flatpak/icon.png /app/share/icons/hicolor/128x128/apps/com.github.kris.projectpuzzle.png
