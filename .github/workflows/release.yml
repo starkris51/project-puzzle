@@ -60,6 +60,8 @@ jobs:
           dotnet-version: "9.0.x"
 
       - name: Publish for Linux
+        env:
+          DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
         run: dotnet publish project-puzzle/project-puzzle.csproj -c Release -r linux-x64 --self-contained -o publish/linux
 
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
