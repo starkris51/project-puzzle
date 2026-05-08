@@ -63,7 +63,7 @@ public static class PieceShapes
     }
 }
 
-public class Piece : IGameObject
+public class Piece
 {
     public Piece(Texture2D texture, Grid grid)
     {

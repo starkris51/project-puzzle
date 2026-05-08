@@ -12,7 +12,7 @@ public enum GridPhase
     GameOver
 }
 
-public class Grid : IGameObject
+public class Grid
 {
     public int Width = 8;
     public int Height = 14;

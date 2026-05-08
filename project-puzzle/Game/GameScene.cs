@@ -23,7 +23,7 @@ public class GameScene(ContentManager content) : IScene
 
     public void Load()
     {
-        tileset = _content.Load<Texture2D>("TilesetV4");
+        tileset = _content.Load<Texture2D>("TilesetV5");
 
         grid = new Grid(tileset, 960, 540);
         grid.OnGameOver += Restart;

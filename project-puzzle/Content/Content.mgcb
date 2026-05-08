@@ -61,6 +61,18 @@
 /processorParam:TextureFormat=Color
 /build:PuzzleGameTestTileset4.png;TilesetV4.png
 
+#begin PuzzleGameTestTileset5.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:PuzzleGameTestTileset5.png;TilesetV5.png
+
 #begin Sounds/ClearMatch.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor

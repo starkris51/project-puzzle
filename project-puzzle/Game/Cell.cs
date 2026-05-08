@@ -7,12 +7,11 @@ public static class CellTexture
 {
     public const int CellSize = 32;
 
-    public static readonly Rectangle Empty = new(0, 0, 32, 32);
-    public static readonly Rectangle Placeholder = new(32, 0, 32, 32);
-    public static readonly Rectangle Invisible = new(0, 32, 32, 32);
-    public static readonly Rectangle Symbol1 = new(64, 0, 32, 32);
-    public static readonly Rectangle Symbol2 = new(96, 0, 32, 32);
-    public static readonly Rectangle Symbol3 = new(96, 32, 32, 32);
+    public static readonly Rectangle Empty = new(160, 32, 32, 32);
+    public static readonly Rectangle Invisible = new(0, 64, 32, 32);
+    public static readonly Rectangle Symbol1 = new(64, 32, 32, 32);
+    public static readonly Rectangle Symbol2 = new(96, 32, 32, 32);
+    public static readonly Rectangle Symbol3 = new(128, 32, 32, 32);
 }
 
 public enum CellType
@@ -58,7 +57,6 @@ public class Cell
     public Cell(CellState state = CellState.Empty)
     {
         State = state;
-        SourceRect = UpdateSourceRect();
     }
 
     private Rectangle UpdateSourceRect()
@@ -66,7 +64,6 @@ public class Cell
         return State switch
         {
             CellState.Empty => CellTexture.Empty,
-            CellState.Placeholder => CellTexture.Placeholder,
             CellState.Invisible => CellTexture.Invisible,
             CellState.Symbol1 => CellTexture.Symbol1,
             CellState.Symbol2 => CellTexture.Symbol2,
