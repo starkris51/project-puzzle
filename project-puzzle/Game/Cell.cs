@@ -15,6 +15,13 @@ public static class CellTexture
     public static readonly Rectangle Symbol3 = new(96, 32, 32, 32);
 }
 
+public enum CellType
+{
+    Symbol1,
+    Symbol2,
+    Symbol3
+}
+
 public enum CellState
 {
     Empty,

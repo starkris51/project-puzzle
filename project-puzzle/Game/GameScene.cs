@@ -17,7 +17,7 @@ public class GameScene(ContentManager content) : IScene
 
     private void SpawnPiece()
     {
-        piece = new Piece(tileset, grid, PieceShapes.All[random.Next(PieceShapes.All.Length)]);
+        piece = new Piece(tileset, grid);
         piece.OnLocked += SpawnPiece;
     }
 

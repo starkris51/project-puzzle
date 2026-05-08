@@ -6,27 +6,72 @@ using Microsoft.Xna.Framework.Input;
 
 public static class PieceShapes
 {
-    public static readonly Cell[][,] All =
+    public static readonly int[][,] BaseShapes =
     [
-        new Cell[,] { { new Cell(CellState.Symbol1), new Cell(CellState.Symbol1), new Cell(CellState.Symbol2) },
-                      { new Cell(), new Cell(), new Cell(CellState.Symbol2) } },
-        new Cell[,] { { new Cell(CellState.Symbol3), new Cell(CellState.Symbol3) },
-                      { new Cell(CellState.Symbol2), new Cell(CellState.Symbol2) } },
-        new Cell[,] { { new Cell(), new Cell(CellState.Symbol1), new Cell() },
-                      { new Cell(CellState.Symbol1), new Cell(CellState.Symbol1), new Cell(CellState.Symbol3) },
-                      {new Cell(), new Cell(CellState.Symbol2), new Cell() }}
+        new int[,] { { 0, 1, 0 },
+                      { 0, 1, 0 },
+                      {0,0,0} },
+        new int[,] { {0,0,0},
+                        {1, 1, 1}, {0, 0, 1}},
+        new int[,] { {0,0,0},
+                      {1, 1, 1},
+                      {1, 0, 0}},
+        new int[,] {
+                        {1, 1, 1},
+                        {1, 0, 1},
+                        {0,0,0}
+                    },
+        new int[,] {
+            {1, 1, 0},
+            {1, 0,0},
+            {0,0,0}
+        },
+        new int[,] {
+            {0, 1, 1},
+            {0, 0,1},
+            {0,0,0}
+        },
     ];
+
+    public static Cell[,] GetNewPiece()
+    {
+        Cell[,] pieceMatrix = new Cell[3, 3];
+
+        Random random = new();
+
+        var randomBaseShape = BaseShapes[random.Next(BaseShapes.Length)];
+
+        CellState[] cellStates = [CellState.Symbol1, CellState.Symbol2, CellState.Symbol3];
+
+        for (int i = 0; i < randomBaseShape.GetLength(0); i++)
+        {
+            for (int j = 0; j < randomBaseShape.GetLength(1); j++)
+            {
+                if (randomBaseShape[i, j] == 1)
+                {
+                    var randomCellStateIndex = random.Next(cellStates.Length);
+                    var newCellState = cellStates[randomCellStateIndex];
+                    pieceMatrix[i, j] = new Cell(newCellState);
+                }
+                else
+                {
+                    pieceMatrix[i, j] = new Cell();
+                }
+            }
+        }
+        return pieceMatrix;
+    }
 }
 
 public class Piece : IGameObject
 {
-    public Piece(Texture2D texture, Grid grid, Cell[,] shape = null!)
+    public Piece(Texture2D texture, Grid grid)
     {
         _texture = texture;
         _grid = grid;
         x = (grid.Width / 2) - 1;
         y = 0;
-        matrix = shape ?? PieceShapes.All[0];
+        matrix = PieceShapes.GetNewPiece();
 
         OnSpawned?.Invoke();
     }
