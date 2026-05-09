@@ -136,6 +136,10 @@ public class Piece
 
     private void Lock()
     {
+        // Lock to the bottom of the grid
+        while (_grid.IsValidPosition(x, y + 1, matrix))
+            y++;
+
         _grid.PlacePiece(x, y, matrix);
 
         OnLocked?.Invoke();
@@ -174,6 +178,7 @@ public class Piece
         int pixelX = _grid.OffsetX + x * _grid.CellSize;
         int pixelY = _grid.OffsetY + y * _grid.CellSize;
 
+        // Draw Piece
         for (int i = 0; i < matrix.GetLength(0); i++)
         {
             for (int j = 0; j < matrix.GetLength(1); j++)
@@ -186,6 +191,30 @@ public class Piece
                     int drawY = pixelY + j * _grid.CellSize;
                     Vector2 origin = new(_grid.CellSize / 2, _grid.CellSize / 2);
                     spriteBatch.Draw(_texture, new Rectangle(drawX + _grid.CellSize / 2, drawY + _grid.CellSize / 2, _grid.CellSize, _grid.CellSize), sourceRect, Color.White, 0f, origin, SpriteEffects.None, 0f);
+                }
+            }
+        }
+
+        // Draw Ghost
+        int ghostY = y;
+        while (_grid.IsValidPosition(x, ghostY + 1, matrix))
+            ghostY++;
+
+        if (ghostY != y)
+        {
+            int ghostPixelY = _grid.OffsetY + ghostY * _grid.CellSize;
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                for (int j = 0; j < matrix.GetLength(1); j++)
+                {
+                    if (matrix[i, j].State != CellState.Empty)
+                    {
+                        Cell cell = matrix[i, j];
+                        int drawX = pixelX + i * _grid.CellSize;
+                        int drawY = ghostPixelY + j * _grid.CellSize;
+                        Vector2 origin = new(_grid.CellSize / 2, _grid.CellSize / 2);
+                        spriteBatch.Draw(_texture, new Rectangle(drawX + _grid.CellSize / 2, drawY + _grid.CellSize / 2, _grid.CellSize, _grid.CellSize), cell.SourceRect, Color.White * 0.3f, 0f, origin, SpriteEffects.None, 0f);
+                    }
                 }
             }
         }

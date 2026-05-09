@@ -11,8 +11,6 @@ public class GameScene(ContentManager content) : IScene
     private Grid grid = null!;
     private Texture2D tileset = null!;
 
-    private readonly Random random = new();
-
     private Piece piece = null!;
 
     private void SpawnPiece()

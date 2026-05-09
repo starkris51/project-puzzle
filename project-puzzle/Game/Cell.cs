@@ -7,11 +7,15 @@ public static class CellTexture
 {
     public const int CellSize = 32;
 
-    public static readonly Rectangle Empty = new(160, 32, 32, 32);
-    public static readonly Rectangle Invisible = new(0, 64, 32, 32);
-    public static readonly Rectangle Symbol1 = new(64, 32, 32, 32);
-    public static readonly Rectangle Symbol2 = new(96, 32, 32, 32);
-    public static readonly Rectangle Symbol3 = new(128, 32, 32, 32);
+    public static readonly Rectangle Empty = new(0, 64, 32, 32);
+    public static readonly Rectangle Invisible = new(0, 96, 32, 32);
+    public static readonly Rectangle Symbol1 = new(64, 0, 32, 32);
+    public static readonly Rectangle Symbol2 = new(96, 0, 32, 32);
+    public static readonly Rectangle Symbol3 = new(128, 0, 32, 32);
+
+    public static readonly Rectangle DecorationLine = new(192, 64, 32, 32);
+    public static readonly Rectangle DecorationCorner = new(192, 32, 32, 32);
+
 }
 
 public enum CellType

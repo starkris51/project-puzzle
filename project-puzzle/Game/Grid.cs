@@ -134,57 +134,8 @@ public class Grid
                 Cell cell = cells[x, y];
                 if (cell.State == CellState.Empty || cell.State == CellState.Placeholder || cell.State == CellState.Invisible || cell.IsClearing) continue;
 
-                var results = cell.CheckNeighborStates(cells, x, y);
-                if (results.Count == 0) continue;
 
-                bool cleared = false;
 
-                foreach (var (direction, state) in results)
-                {
-                    List<Cell> matched = [];
-
-                    if (direction == Direction.Up)
-                    {
-                        for (int i = y - 1; i >= 0; i--)
-                        {
-                            if (cells[x, i].State == state && !cells[x, i].IsClearing) matched.Add(cells[x, i]);
-                            else break;
-                        }
-                    }
-                    else if (direction == Direction.Down)
-                    {
-                        for (int i = y + 1; i < Height; i++)
-                        {
-                            if (cells[x, i].State == state && !cells[x, i].IsClearing) matched.Add(cells[x, i]);
-                            else break;
-                        }
-                    }
-                    else if (direction == Direction.Left)
-                    {
-                        for (int i = x - 1; i >= 0; i--)
-                        {
-                            if (cells[i, y].State == state && !cells[i, y].IsClearing) matched.Add(cells[i, y]);
-                            else break;
-                        }
-                    }
-                    else if (direction == Direction.Right)
-                    {
-                        for (int i = x + 1; i < Width; i++)
-                        {
-                            if (cells[i, y].State == state && !cells[i, y].IsClearing) matched.Add(cells[i, y]);
-                            else break;
-                        }
-                    }
-
-                    if (matched.Count >= 3)
-                    {
-                        foreach (Cell c in matched) c.IsClearing = true;
-                        cleared = true;
-                        found = true;
-                    }
-                }
-
-                if (cleared) cell.IsClearing = true;
             }
         }
 
@@ -275,15 +226,15 @@ public class Grid
             }
         }
 
-        cells[0, Height - 1] = new Cell(CellState.Invisible);
-        cells[0, Height - 2] = new Cell(CellState.Invisible);
-        cells[1, Height - 1] = new Cell(CellState.Invisible);
-        cells[Width - 1, Height - 1] = new Cell(CellState.Invisible);
-        cells[Width - 1, Height - 2] = new Cell(CellState.Invisible);
-        cells[Width - 2, Height - 1] = new Cell(CellState.Invisible);
+        // cells[0, Height - 1] = new Cell(CellState.Invisible);
+        // cells[0, Height - 2] = new Cell(CellState.Invisible);
+        // cells[1, Height - 1] = new Cell(CellState.Invisible);
+        // cells[Width - 1, Height - 1] = new Cell(CellState.Invisible);
+        // cells[Width - 1, Height - 2] = new Cell(CellState.Invisible);
+        // cells[Width - 2, Height - 1] = new Cell(CellState.Invisible);
 
-        cells[0, 0] = new Cell(CellState.Invisible);
-        cells[Width - 1, 0] = new Cell(CellState.Invisible);
+        // cells[0, 0] = new Cell(CellState.Invisible);
+        // cells[Width - 1, 0] = new Cell(CellState.Invisible);
 
         _phase = GridPhase.Playing;
         _phaseTimer = 0;
@@ -291,7 +242,7 @@ public class Grid
 
     public void Draw(SpriteBatch spriteBatch)
     {
-        // Draw background
+        // Draw grid background
         for (int x = 0; x < Width; x++)
         {
             for (int y = 0; y < Height; y++)
@@ -303,6 +254,8 @@ public class Grid
             }
         }
 
+
+
         // Draw cells
 
         for (int x = 0; x < Width; x++)
@@ -313,7 +266,7 @@ public class Grid
 
                 Cell cell = cells[x, y];
                 Vector2 origin = new(CellSize / 2, CellSize / 2);
-                Color tint = cell.IsClearing ? Color.White * 0.4f : Color.White;
+                Color tint = cell.IsClearing ? Color.Blue * 1.2f : Color.White;
                 spriteBatch.Draw(_texture, new Rectangle(OffsetX + x * CellSize + CellSize / 2, OffsetY + y * CellSize + CellSize / 2, CellSize, CellSize), cell.SourceRect, tint, 0f, origin, SpriteEffects.None, 0f);
             }
         }
