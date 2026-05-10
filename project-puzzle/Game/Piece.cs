@@ -8,38 +8,37 @@ public static class PieceShapes
 {
     public static readonly int[][,] BaseShapes =
     [
-        new int[,] { { 0, 1, 0 },
-                      { 0, 1, 0 },
-                      {0,0,0} },
-        new int[,] { {0,0,0},
-                        {1, 1, 1}, {0, 0, 1}},
-        new int[,] { {0,0,0},
-                      {1, 1, 1},
-                      {1, 0, 0}},
-        new int[,] {
-                        {1, 1, 1},
-                        {1, 0, 1},
-                        {0,0,0}
+        new int[,] {{1, 1, 1},
+                    {0, 0, 1}},
+        new int[,] {{1, 1, 1},
+                    {1, 0, 0}},
+        new int[,] {{1, 1, 1},
+                    {1, 0, 1}},
+        new int[,] {{1, 0, 1},
+                    {0, 1, 0},
+                    {1, 0, 1}
                     },
         new int[,] {
-            {1, 1, 0},
-            {1, 0,0},
-            {0,0,0}
+            {1, 1},
+            {1, 0},
         },
         new int[,] {
-            {0, 1, 1},
-            {0, 0,1},
-            {0,0,0}
+            {1, 1},
+            {0, 1},
+        },
+        new int[,] {
+            {1, 1},
+            {1, 1},
         },
     ];
 
     public static Cell[,] GetNewPiece()
     {
-        Cell[,] pieceMatrix = new Cell[3, 3];
-
         Random random = new();
 
         var randomBaseShape = BaseShapes[random.Next(BaseShapes.Length)];
+
+        Cell[,] pieceMatrix = new Cell[randomBaseShape.GetLength(0), randomBaseShape.GetLength(1)];
 
         CellState[] cellStates = [CellState.Symbol1, CellState.Symbol2, CellState.Symbol3];
 

@@ -22,6 +22,8 @@ public class Grid
     private readonly int _screenWidth;
     private readonly int _screenHeight;
 
+    public int AmountToClear { get; private set; } = 3;
+
     public int OffsetX => (_screenWidth - Width * CellSize) / 2;
     public int OffsetY => (_screenHeight - Height * CellSize) / 2;
 
@@ -127,17 +129,127 @@ public class Grid
     {
         bool found = false;
 
-        for (int x = 0; x < Width; x++)
+        // Horizontal runs
+        for (int y = 0; y < Height; y++)
         {
-            for (int y = Height - 1; y >= 0; y--)
+            int runStart = 0;
+            while (runStart < Width)
             {
-                Cell cell = cells[x, y];
-                if (cell.State == CellState.Empty || cell.State == CellState.Placeholder || cell.State == CellState.Invisible || cell.IsClearing) continue;
+                CellState state = cells[runStart, y].State;
+                if (state == CellState.Empty || state == CellState.Placeholder || state == CellState.Invisible)
+                {
+                    runStart++;
+                    continue;
+                }
 
+                int runEnd = runStart + 1;
+                while (runEnd < Width && cells[runEnd, y].State == state)
+                    runEnd++;
 
+                if (runEnd - runStart >= AmountToClear)
+                {
+                    found = true;
+                    for (int x = runStart; x < runEnd; x++)
+                        cells[x, y].IsClearing = true;
+                }
 
+                runStart = runEnd;
             }
         }
+
+        // Vertical runs
+        for (int x = 0; x < Width; x++)
+        {
+            int runStart = 0;
+            while (runStart < Height)
+            {
+                CellState state = cells[x, runStart].State;
+                if (state == CellState.Empty || state == CellState.Placeholder || state == CellState.Invisible)
+                {
+                    runStart++;
+                    continue;
+                }
+
+                int runEnd = runStart + 1;
+                while (runEnd < Height && cells[x, runEnd].State == state)
+                    runEnd++;
+
+                if (runEnd - runStart >= AmountToClear)
+                {
+                    found = true;
+                    for (int y = runStart; y < runEnd; y++)
+                        cells[x, y].IsClearing = true;
+                }
+
+                runStart = runEnd;
+            }
+        }
+
+        // Diagonal runs (top-left to bottom-right)
+        // for (int startX = 0; startX < Width; startX++)
+        // {
+        //     for (int startY = 0; startY < Height; startY++)
+        //     {
+        //         CellState state = cells[startX, startY].State;
+        //         if (state == CellState.Empty || state == CellState.Placeholder || state == CellState.Invisible)
+        //             continue;
+
+        //         int count = 1;
+        //         while (startX + count < Width && startY + count < Height && cells[startX + count, startY + count].State == state)
+        //             count++;
+
+        //         if (count >= AmountToClear)
+        //         {
+        //             found = true;
+        //             for (int i = 0; i < count; i++)
+        //                 cells[startX + i, startY + i].IsClearing = true;
+        //         }
+        //     }
+        // }
+
+        // // Diagonal runs (top-right to bottom-left)
+        // for (int startX = 0; startX < Width; startX++)
+        // {
+        //     for (int startY = 0; startY < Height; startY++)
+        //     {
+        //         CellState state = cells[startX, startY].State;
+        //         if (state == CellState.Empty || state == CellState.Placeholder || state == CellState.Invisible)
+        //             continue;
+
+        //         int count = 1;
+        //         while (startX - count >= 0 && startY + count < Height && cells[startX - count, startY + count].State == state)
+        //             count++;
+
+        //         if (count >= AmountToClear)
+        //         {
+        //             found = true;
+        //             for (int i = 0; i < count; i++)
+        //                 cells[startX - i, startY + i].IsClearing = true;
+        //         }
+        //     }
+        // }
+
+        // Square runs
+        // for (int x = 0; x < Width - 1; x++)
+        // {
+        //     for (int y = 0; y < Height - 1; y++)
+        //     {
+        //         CellState state = cells[x, y].State;
+        //         if (state == CellState.Empty || state == CellState.Placeholder || state == CellState.Invisible)
+        //             continue;
+
+        //         if (cells[x + 1, y].State == state &&
+        //             cells[x, y + 1].State == state &&
+        //             cells[x + 1, y + 1].State == state)
+        //         {
+        //             found = true;
+        //             cells[x, y].IsClearing = true;
+        //             cells[x + 1, y].IsClearing = true;
+        //             cells[x, y + 1].IsClearing = true;
+        //             cells[x + 1, y + 1].IsClearing = true;
+        //         }
+        //     }
+        // }
 
         return found;
     }
