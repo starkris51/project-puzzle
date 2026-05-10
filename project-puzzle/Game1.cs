@@ -7,9 +7,9 @@ namespace project_puzzle;
 
 public class Game1 : Game
 {
-    private GraphicsDeviceManager _graphics;
+    private readonly GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
-    private ScalingWindow _scalingWindow;
+    private readonly ScalingWindow _scalingWindow;
     private SceneManager _sceneManager;
 
     private GameScene _gameScene;
