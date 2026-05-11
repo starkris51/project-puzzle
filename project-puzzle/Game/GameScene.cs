@@ -16,7 +16,6 @@ public class GameScene(ContentManager content) : IScene
     private void SpawnPiece()
     {
         piece = new Piece(tileset, grid);
-        piece.OnLocked += SpawnPiece;
     }
 
     public void Load()
@@ -24,8 +23,11 @@ public class GameScene(ContentManager content) : IScene
         tileset = _content.Load<Texture2D>("TilesetV5");
 
         grid = new Grid(tileset, 960, 540);
-        grid.OnGameOver += Restart;
+
         SpawnPiece();
+
+        grid.OnGameOver += Restart;
+        grid.RequestNewPiece += SpawnPiece;
     }
 
     public void Unload()
@@ -43,11 +45,11 @@ public class GameScene(ContentManager content) : IScene
     public void Update(GameTime gameTime)
     {
         KeyboardInfo.Update();
-        grid.Update(gameTime);
+        grid?.Update(gameTime);
 
-        if (grid.IsGameOver) return;
+        if (grid?.IsGameOver ?? true) return;
 
-        piece.Update(gameTime);
+        piece?.Update(gameTime);
     }
 
     public void Draw(GameTime gameTime, SpriteBatch spriteBatch)

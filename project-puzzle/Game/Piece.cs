@@ -1,8 +1,16 @@
 
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+
+public enum PieceTypes
+{
+    Mono,
+    Dual,
+    Chaos,
+}
 
 public static class PieceShapes
 {
@@ -12,8 +20,6 @@ public static class PieceShapes
                     {0, 0, 1}},
         new int[,] {{1, 1, 1},
                     {1, 0, 0}},
-        new int[,] {{1, 1, 1},
-                    {1, 0, 1}},
         new int[,] {
             {1, 1},
             {1, 0},
@@ -26,6 +32,14 @@ public static class PieceShapes
             {1, 1},
             {1, 1},
         },
+        new int[,] {
+            {1, 0, 1},
+            {0, 1, 0},
+        },
+        new int[,] {
+            {1, 1, 1},
+            {0, 1, 0},
+        },
     ];
 
     public static Cell[,] GetNewPiece()
@@ -33,10 +47,29 @@ public static class PieceShapes
         Random random = new();
 
         var randomBaseShape = BaseShapes[random.Next(BaseShapes.Length)];
+        var pieceType = (PieceTypes)random.Next(Enum.GetValues<PieceTypes>().Length);
 
         Cell[,] pieceMatrix = new Cell[randomBaseShape.GetLength(0), randomBaseShape.GetLength(1)];
 
-        CellState[] cellStates = [CellState.Symbol1, CellState.Symbol2, CellState.Symbol3];
+        CellState[] cellStates = [];
+
+        if (pieceType == PieceTypes.Mono)
+        {
+            var randomSymbol = (CellState)random.Next((int)CellState.Symbol1, (int)CellState.Symbol3 + 1);
+
+            cellStates = [randomSymbol];
+        }
+        else if (pieceType == PieceTypes.Dual)
+        {
+            var symbol1 = (CellState)random.Next((int)CellState.Symbol1, (int)CellState.Symbol3 + 1);
+            var symbol2 = (CellState)(((int)symbol1 - (int)CellState.Symbol1 + 1) % 3 + (int)CellState.Symbol1);
+
+            cellStates = [symbol1, symbol2];
+        }
+        else if (pieceType == PieceTypes.Chaos)
+        {
+            cellStates = [CellState.Symbol1, CellState.Symbol2, CellState.Symbol3];
+        }
 
         for (int i = 0; i < randomBaseShape.GetLength(0); i++)
         {
@@ -81,7 +114,6 @@ public class Piece
     private double fallTimer = 0;
     private readonly double fallInterval = 0.5; // seconds between drops
 
-    public event Action OnLocked;
     public event Action OnSpawned;
     public event Action OnMoved;
     public event Action OnRotated;
@@ -136,8 +168,6 @@ public class Piece
             y++;
 
         _grid.PlacePiece(x, y, matrix);
-
-        OnLocked?.Invoke();
         // SoundManager.Play(Sounds.PlacePiece); --- IGNORE ---
     }
 
@@ -170,6 +200,8 @@ public class Piece
 
     public void Draw(SpriteBatch spriteBatch)
     {
+        if (_grid.IsAnimating) return;
+
         int pixelX = _grid.OffsetX + x * _grid.CellSize;
         int pixelY = _grid.OffsetY + y * _grid.CellSize;
 
@@ -190,25 +222,65 @@ public class Piece
             }
         }
 
-        // Draw Ghost
+        // Draw Ghost with gravity
         int ghostY = y;
         while (_grid.IsValidPosition(x, ghostY + 1, matrix))
             ghostY++;
 
         if (ghostY != y)
         {
-            int ghostPixelY = _grid.OffsetY + ghostY * _grid.CellSize;
+            Cell[,] tempGrid = new Cell[_grid.Width, _grid.Height];
+            for (int gx = 0; gx < _grid.Width; gx++)
+                for (int gy = 0; gy < _grid.Height; gy++)
+                    tempGrid[gx, gy] = new Cell(_grid.GetCellState(gx, gy));
+
+            // Place piece cells and track them by reference
+            var ghostCells = new HashSet<Cell>();
             for (int i = 0; i < matrix.GetLength(0); i++)
             {
                 for (int j = 0; j < matrix.GetLength(1); j++)
                 {
                     if (matrix[i, j].State != CellState.Empty)
                     {
-                        Cell cell = matrix[i, j];
-                        int drawX = pixelX + i * _grid.CellSize;
-                        int drawY = ghostPixelY + j * _grid.CellSize;
+                        var cell = new Cell(matrix[i, j].State);
+                        tempGrid[x + i, ghostY + j] = cell;
+                        ghostCells.Add(cell);
+                    }
+                }
+            }
+
+            // Apply gravity until stable
+            bool moved = true;
+            while (moved)
+            {
+                moved = false;
+                for (int gx = 0; gx < _grid.Width; gx++)
+                {
+                    for (int gy = _grid.Height - 2; gy >= 0; gy--)
+                    {
+                        if (tempGrid[gx, gy].State == CellState.Empty || tempGrid[gx, gy].State == CellState.Invisible) continue;
+                        if (tempGrid[gx, gy + 1].State == CellState.Empty)
+                        {
+                            tempGrid[gx, gy + 1] = tempGrid[gx, gy];
+                            tempGrid[gx, gy] = new Cell();
+                            moved = true;
+                        }
+                    }
+                }
+            }
+
+            // Draw ghost cells at their final positions
+            for (int gx = 0; gx < _grid.Width; gx++)
+            {
+                for (int gy = 0; gy < _grid.Height; gy++)
+                {
+                    if (ghostCells.Contains(tempGrid[gx, gy]))
+                    {
+                        int drawX = _grid.OffsetX + gx * _grid.CellSize;
+                        int drawY = _grid.OffsetY + gy * _grid.CellSize;
                         Vector2 origin = new(_grid.CellSize / 2, _grid.CellSize / 2);
-                        spriteBatch.Draw(_texture, new Rectangle(drawX + _grid.CellSize / 2, drawY + _grid.CellSize / 2, _grid.CellSize, _grid.CellSize), cell.SourceRect, Color.White * 0.3f, 0f, origin, SpriteEffects.None, 0f);
+                        spriteBatch.Draw(_texture, new Rectangle(drawX + _grid.CellSize / 2, drawY + _grid.CellSize / 2, _grid.CellSize, _grid.CellSize), tempGrid[gx, gy].SourceRect, Color.White * 0.3f, 0f, origin, SpriteEffects.None, 0f);
+                        spriteBatch.Draw(_texture, new Rectangle(drawX + _grid.CellSize / 2, drawY + _grid.CellSize / 2, _grid.CellSize, _grid.CellSize), CellTexture.Select, Color.White, 0f, origin, SpriteEffects.None, 0f);
                     }
                 }
             }

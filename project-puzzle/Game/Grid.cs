@@ -29,17 +29,20 @@ public class Grid
 
     private readonly Texture2D _texture;
 
-    private GridPhase _phase = GridPhase.Playing;
+    private GridPhase _currentPhase = GridPhase.Playing;
     private double _phaseTimer = 0;
-    private const double GravityStepDelay = 0.05;
+    private const double GravityStepDelay = 0.08;
     private const double ClearDelay = 0.4;
 
-    public bool IsAnimating => _phase != GridPhase.Playing && _phase != GridPhase.GameOver;
-    public bool IsGameOver => _phase == GridPhase.GameOver;
+    public bool IsAnimating => _currentPhase != GridPhase.Playing && _currentPhase != GridPhase.GameOver;
+    public bool IsGameOver => _currentPhase == GridPhase.GameOver;
 
     public event Action OnGameOver;
+    public event Action RequestNewPiece;
 
     private readonly Cell[,] cells;
+
+    public Cell[,] Cells { get; set; }
 
     public Grid(Texture2D texture, int screenWidth, int screenHeight)
     {
@@ -102,7 +105,8 @@ public class Grid
                 }
             }
         }
-        _phase = GridPhase.Gravity;
+
+        _currentPhase = GridPhase.Gravity;
         _phaseTimer = 0;
     }
 
@@ -270,11 +274,11 @@ public class Grid
 
     public void Update(GameTime gameTime)
     {
-        if (_phase == GridPhase.Playing) return;
+        if (_currentPhase == GridPhase.Playing) return;
 
         _phaseTimer += gameTime.ElapsedGameTime.TotalSeconds;
 
-        switch (_phase)
+        switch (_currentPhase)
         {
             case GridPhase.Gravity:
                 if (_phaseTimer >= GravityStepDelay)
@@ -283,7 +287,9 @@ public class Grid
                     bool moved = ApplyGravityOneStep();
                     SoundManager.Play(Sounds.Fall);
                     if (!moved)
-                        _phase = GridPhase.Clearing;
+                    {
+                        _currentPhase = GridPhase.Clearing;
+                    }
                 }
                 break;
 
@@ -292,17 +298,18 @@ public class Grid
                 if (hadMatches)
                 {
                     SoundManager.Play(Sounds.ClearMatch);
-                    _phase = GridPhase.WaitingAfterClear;
+                    _currentPhase = GridPhase.WaitingAfterClear;
                     _phaseTimer = 0;
                 }
                 else if (CheckGameOver())
                 {
-                    _phase = GridPhase.GameOver;
+                    _currentPhase = GridPhase.GameOver;
                     OnGameOver?.Invoke();
                 }
                 else
                 {
-                    _phase = GridPhase.Playing;
+                    _currentPhase = GridPhase.Playing;
+                    RequestNewPiece?.Invoke();
                 }
                 break;
 
@@ -310,7 +317,7 @@ public class Grid
                 if (_phaseTimer >= ClearDelay)
                 {
                     RemoveMarkedCells();
-                    _phase = GridPhase.Gravity;
+                    _currentPhase = GridPhase.Gravity;
                     _phaseTimer = 0;
                 }
                 break;
@@ -338,17 +345,17 @@ public class Grid
             }
         }
 
-        // cells[0, Height - 1] = new Cell(CellState.Invisible);
-        // cells[0, Height - 2] = new Cell(CellState.Invisible);
-        // cells[1, Height - 1] = new Cell(CellState.Invisible);
-        // cells[Width - 1, Height - 1] = new Cell(CellState.Invisible);
-        // cells[Width - 1, Height - 2] = new Cell(CellState.Invisible);
-        // cells[Width - 2, Height - 1] = new Cell(CellState.Invisible);
+        cells[0, Height - 1] = new Cell(CellState.Invisible);
+        cells[0, Height - 2] = new Cell(CellState.Invisible);
+        cells[1, Height - 1] = new Cell(CellState.Invisible);
+        cells[Width - 1, Height - 1] = new Cell(CellState.Invisible);
+        cells[Width - 1, Height - 2] = new Cell(CellState.Invisible);
+        cells[Width - 2, Height - 1] = new Cell(CellState.Invisible);
 
-        // cells[0, 0] = new Cell(CellState.Invisible);
-        // cells[Width - 1, 0] = new Cell(CellState.Invisible);
+        cells[0, 0] = new Cell(CellState.Invisible);
+        cells[Width - 1, 0] = new Cell(CellState.Invisible);
 
-        _phase = GridPhase.Playing;
+        _currentPhase = GridPhase.Playing;
         _phaseTimer = 0;
     }
 
@@ -365,8 +372,6 @@ public class Grid
                 spriteBatch.Draw(_texture, new Rectangle(OffsetX + x * CellSize + CellSize / 2, OffsetY + y * CellSize + CellSize / 2, CellSize, CellSize), CellTexture.Empty, Color.White, 0f, origin, SpriteEffects.None, 0f);
             }
         }
-
-
 
         // Draw cells
 

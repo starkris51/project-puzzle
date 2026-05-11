@@ -15,6 +15,7 @@ public static class CellTexture
 
     public static readonly Rectangle DecorationLine = new(192, 64, 32, 32);
     public static readonly Rectangle DecorationCorner = new(192, 32, 32, 32);
+    public static readonly Rectangle Select = new(160, 32, 32, 32);
 
 }
 
