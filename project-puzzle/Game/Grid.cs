@@ -5,9 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 public enum GridPhase
 {
-    Playing,
-    Gravity,
-    Clearing,
+    Settling,
     WaitingAfterClear,
     GameOver
 }
@@ -29,12 +27,11 @@ public class Grid
 
     private readonly Texture2D _texture;
 
-    private GridPhase _currentPhase = GridPhase.Playing;
+    private GridPhase _currentPhase = GridPhase.Settling;
     private double _phaseTimer = 0;
-    private const double GravityStepDelay = 0.08;
+    private const double GravityStepDelay = 0.1;
     private const double ClearDelay = 0.4;
 
-    public bool IsAnimating => _currentPhase != GridPhase.Playing && _currentPhase != GridPhase.GameOver;
     public bool IsGameOver => _currentPhase == GridPhase.GameOver;
 
     public event Action OnGameOver;
@@ -106,8 +103,10 @@ public class Grid
             }
         }
 
-        _currentPhase = GridPhase.Gravity;
-        _phaseTimer = 0;
+        // The grid keeps settling on its own, so the placed cells start falling on the
+        // next gravity step. Hand the player a new piece immediately instead of waiting
+        // for the board to come to rest.
+        RequestNewPiece?.Invoke();
     }
 
     private bool ApplyGravityOneStep()
@@ -274,42 +273,31 @@ public class Grid
 
     public void Update(GameTime gameTime)
     {
-        if (_currentPhase == GridPhase.Playing) return;
+        if (_currentPhase == GridPhase.GameOver) return;
 
         _phaseTimer += gameTime.ElapsedGameTime.TotalSeconds;
 
         switch (_currentPhase)
         {
-            case GridPhase.Gravity:
-                if (_phaseTimer >= GravityStepDelay)
-                {
-                    _phaseTimer = 0;
-                    bool moved = ApplyGravityOneStep();
-                    SoundManager.Play(Sounds.Fall);
-                    if (!moved)
-                    {
-                        _currentPhase = GridPhase.Clearing;
-                    }
-                }
-                break;
+            case GridPhase.Settling:
+                if (_phaseTimer < GravityStepDelay) break;
+                _phaseTimer = 0;
 
-            case GridPhase.Clearing:
-                bool hadMatches = MarkMatches();
-                if (hadMatches)
+                if (ApplyGravityOneStep())
+                {
+                    SoundManager.Play(Sounds.Fall);
+                    break;
+                }
+
+                if (MarkMatches())
                 {
                     SoundManager.Play(Sounds.ClearMatch);
                     _currentPhase = GridPhase.WaitingAfterClear;
-                    _phaseTimer = 0;
                 }
                 else if (CheckGameOver())
                 {
                     _currentPhase = GridPhase.GameOver;
                     OnGameOver?.Invoke();
-                }
-                else
-                {
-                    _currentPhase = GridPhase.Playing;
-                    RequestNewPiece?.Invoke();
                 }
                 break;
 
@@ -317,7 +305,7 @@ public class Grid
                 if (_phaseTimer >= ClearDelay)
                 {
                     RemoveMarkedCells();
-                    _currentPhase = GridPhase.Gravity;
+                    _currentPhase = GridPhase.Settling;
                     _phaseTimer = 0;
                 }
                 break;
@@ -355,7 +343,7 @@ public class Grid
         cells[0, 0] = new Cell(CellState.Invisible);
         cells[Width - 1, 0] = new Cell(CellState.Invisible);
 
-        _currentPhase = GridPhase.Playing;
+        _currentPhase = GridPhase.Settling;
         _phaseTimer = 0;
     }
 

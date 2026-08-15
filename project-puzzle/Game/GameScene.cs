@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -11,11 +12,11 @@ public class GameScene(ContentManager content) : IScene
     private Grid grid = null!;
     private Texture2D tileset = null!;
 
-    private Piece piece = null!;
+    private readonly List<Piece> pieces = [];
 
     private void SpawnPiece()
     {
-        piece = new Piece(tileset, grid);
+        pieces.Add(new Piece(tileset, grid));
     }
 
     public void Load()
@@ -24,6 +25,7 @@ public class GameScene(ContentManager content) : IScene
 
         grid = new Grid(tileset, 960, 540);
 
+        pieces.Clear();
         SpawnPiece();
 
         grid.OnGameOver += Restart;
@@ -39,6 +41,7 @@ public class GameScene(ContentManager content) : IScene
     private void Restart()
     {
         grid.Reset();
+        pieces.Clear();
         SpawnPiece();
     }
 
@@ -49,12 +52,22 @@ public class GameScene(ContentManager content) : IScene
 
         if (grid?.IsGameOver ?? true) return;
 
-        piece?.Update(gameTime);
+        // Walk backwards over the pieces that existed at the start of the frame: locking a
+        // piece spawns its replacement at the end of the list, which must not be updated
+        // again this frame.
+        for (int i = pieces.Count - 1; i >= 0; i--)
+        {
+            Piece p = pieces[i];
+            p.Update(gameTime);
+            if (p.IsLocked) pieces.RemoveAt(i);
+        }
     }
 
     public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
     {
         grid?.Draw(spriteBatch);
-        piece?.Draw(spriteBatch);
+
+        foreach (Piece p in pieces)
+            p.Draw(spriteBatch);
     }
 }

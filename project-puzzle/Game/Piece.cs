@@ -1,6 +1,5 @@
 
 using System;
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -114,9 +113,14 @@ public class Piece
     private double fallTimer = 0;
     private readonly double fallInterval = 0.5; // seconds between drops
 
+    // Set once the piece has handed its cells over to the grid. The scene drops locked
+    // pieces from its update/draw list.
+    public bool IsLocked { get; private set; }
+
     public event Action OnSpawned;
     public event Action OnMoved;
     public event Action OnRotated;
+    public event Action OnLocked;
 
     private bool TryMove(int dx, int dy)
     {
@@ -163,23 +167,29 @@ public class Piece
 
     private void Lock()
     {
+        if (IsLocked) return;
+        if (!_grid.IsValidPosition(x, y, matrix)) return;
+
         // Lock to the bottom of the grid
-        while (_grid.IsValidPosition(x, y + 1, matrix))
-            y++;
+        // while (_grid.IsValidPosition(x, y + 1, matrix))
+        //     y++;
 
         _grid.PlacePiece(x, y, matrix);
+        IsLocked = true;
+        OnLocked?.Invoke();
         // SoundManager.Play(Sounds.PlacePiece); --- IGNORE ---
     }
 
     public void Update(GameTime gameTime)
     {
-        if (_grid.IsAnimating) return;
+        if (IsLocked || _grid.IsGameOver) return;
 
         fallTimer += gameTime.ElapsedGameTime.TotalSeconds;
         if (fallTimer >= fallInterval)
         {
             if (!TryMove(0, 1)) Lock();
             fallTimer = 0;
+            if (IsLocked) return;
         }
 
         if (KeyboardInfo.WasKeyJustPressed(Keys.Left)) TryMove(-1, 0);
@@ -192,6 +202,7 @@ public class Piece
         {
             Lock();
         }
+        if (IsLocked) return;
         if (KeyboardInfo.WasKeyJustPressed(Keys.R) || KeyboardInfo.WasKeyJustPressed(Keys.Up))
         {
             TryRotate();
@@ -200,7 +211,7 @@ public class Piece
 
     public void Draw(SpriteBatch spriteBatch)
     {
-        if (_grid.IsAnimating) return;
+        if (IsLocked) return;
 
         int pixelX = _grid.OffsetX + x * _grid.CellSize;
         int pixelY = _grid.OffsetY + y * _grid.CellSize;
@@ -222,66 +233,31 @@ public class Piece
             }
         }
 
-        // Draw Ghost with gravity
+        // Draw Ghost at the piece's immediate landing spot against the grid as it stands
+        // right now. Cells still mid-fall haven't reached their final resting place yet,
+        // so the ghost must sit on top of them where they currently are, not on the
+        // board's eventual settled state.
         int ghostY = y;
         while (_grid.IsValidPosition(x, ghostY + 1, matrix))
             ghostY++;
 
         if (ghostY != y)
         {
-            Cell[,] tempGrid = new Cell[_grid.Width, _grid.Height];
-            for (int gx = 0; gx < _grid.Width; gx++)
-                for (int gy = 0; gy < _grid.Height; gy++)
-                    tempGrid[gx, gy] = new Cell(_grid.GetCellState(gx, gy));
+            int pixelGhostX = _grid.OffsetX + x * _grid.CellSize;
+            int pixelGhostY = _grid.OffsetY + ghostY * _grid.CellSize;
 
-            // Place piece cells and track them by reference
-            var ghostCells = new HashSet<Cell>();
             for (int i = 0; i < matrix.GetLength(0); i++)
             {
                 for (int j = 0; j < matrix.GetLength(1); j++)
                 {
-                    if (matrix[i, j].State != CellState.Empty)
-                    {
-                        var cell = new Cell(matrix[i, j].State);
-                        tempGrid[x + i, ghostY + j] = cell;
-                        ghostCells.Add(cell);
-                    }
-                }
-            }
+                    if (matrix[i, j].State == CellState.Empty) continue;
 
-            // Apply gravity until stable
-            bool moved = true;
-            while (moved)
-            {
-                moved = false;
-                for (int gx = 0; gx < _grid.Width; gx++)
-                {
-                    for (int gy = _grid.Height - 2; gy >= 0; gy--)
-                    {
-                        if (tempGrid[gx, gy].State == CellState.Empty || tempGrid[gx, gy].State == CellState.Invisible) continue;
-                        if (tempGrid[gx, gy + 1].State == CellState.Empty)
-                        {
-                            tempGrid[gx, gy + 1] = tempGrid[gx, gy];
-                            tempGrid[gx, gy] = new Cell();
-                            moved = true;
-                        }
-                    }
-                }
-            }
-
-            // Draw ghost cells at their final positions
-            for (int gx = 0; gx < _grid.Width; gx++)
-            {
-                for (int gy = 0; gy < _grid.Height; gy++)
-                {
-                    if (ghostCells.Contains(tempGrid[gx, gy]))
-                    {
-                        int drawX = _grid.OffsetX + gx * _grid.CellSize;
-                        int drawY = _grid.OffsetY + gy * _grid.CellSize;
-                        Vector2 origin = new(_grid.CellSize / 2, _grid.CellSize / 2);
-                        spriteBatch.Draw(_texture, new Rectangle(drawX + _grid.CellSize / 2, drawY + _grid.CellSize / 2, _grid.CellSize, _grid.CellSize), tempGrid[gx, gy].SourceRect, Color.White * 0.3f, 0f, origin, SpriteEffects.None, 0f);
-                        spriteBatch.Draw(_texture, new Rectangle(drawX + _grid.CellSize / 2, drawY + _grid.CellSize / 2, _grid.CellSize, _grid.CellSize), CellTexture.Select, Color.White, 0f, origin, SpriteEffects.None, 0f);
-                    }
+                    Cell cell = matrix[i, j];
+                    int drawX = pixelGhostX + i * _grid.CellSize;
+                    int drawY = pixelGhostY + j * _grid.CellSize;
+                    Vector2 origin = new(_grid.CellSize / 2, _grid.CellSize / 2);
+                    spriteBatch.Draw(_texture, new Rectangle(drawX + _grid.CellSize / 2, drawY + _grid.CellSize / 2, _grid.CellSize, _grid.CellSize), cell.SourceRect, Color.White * 0.3f, 0f, origin, SpriteEffects.None, 0f);
+                    spriteBatch.Draw(_texture, new Rectangle(drawX + _grid.CellSize / 2, drawY + _grid.CellSize / 2, _grid.CellSize, _grid.CellSize), CellTexture.Select, Color.White, 0f, origin, SpriteEffects.None, 0f);
                 }
             }
         }
