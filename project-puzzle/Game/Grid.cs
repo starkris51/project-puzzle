@@ -76,11 +76,21 @@ public class Grid
     // Re-fits this grid into a new viewport/margin pair, recomputing the largest cell
     // size that still fits the board (plus reserved UI space) inside it. Lets a layout
     // change (e.g. player count changing) resize an existing grid instead of recreating it.
+    //
+    // CellSize must stay a whole multiple of the texture's native tile size
+    // (CellTexture.CellSize): any other value forces sprites to be stretched by a
+    // fractional factor, which with point sampling shows up as uneven, "mixed up" pixels.
     public void SetViewport(Rectangle viewport, GridMargins margins = default)
     {
         _viewport = viewport;
         _margins = margins;
-        CellSize = Math.Max(1, Math.Min(ContentWidth / Width, ContentHeight / Height));
+
+        int nativeSize = CellTexture.CellSize;
+        int scaleByWidth = ContentWidth / (Width * nativeSize);
+        int scaleByHeight = ContentHeight / (Height * nativeSize);
+        int scale = Math.Max(1, Math.Min(scaleByWidth, scaleByHeight));
+
+        CellSize = nativeSize * scale;
     }
 
     public bool IsCellEmpty(int x, int y)

@@ -13,14 +13,14 @@ public class PlayerBoard
 
 public class GameScene(ContentManager content) : IScene
 {
-    private const int ScreenWidth = 960;
-    private const int ScreenHeight = 540;
+    private const int ScreenWidth = 1920;
+    private const int ScreenHeight = 1080;
 
     // Margins reserved around each board's viewport for that player's UI. A single
     // board gets a bit of breathing room; splitting the screen for multiple boards
     // reserves more (top especially) so each board's UI doesn't collide with its grid.
-    private static readonly GridMargins SingleBoardMargins = new(top: 40, bottom: 20, left: 20, right: 20);
-    private static readonly GridMargins MultiBoardMargins = new(top: 90, bottom: 30, left: 30, right: 30);
+    private static readonly GridMargins SingleBoardMargins = new(top: 80, bottom: 40, left: 40, right: 40);
+    private static readonly GridMargins MultiBoardMargins = new(top: 180, bottom: 60, left: 60, right: 60);
 
     private readonly ContentManager _content = content;
     private Texture2D tileset = null!;
@@ -91,7 +91,7 @@ public class GameScene(ContentManager content) : IScene
         // Temporary dev toggle for exercising the layout system before real UI/menu
         // flow exists to pick a mode.
         if (KeyboardInfo.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.D1)) SetBoardCount(1);
-        if (KeyboardInfo.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.D2)) SetBoardCount(2);
+        if (KeyboardInfo.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.D2)) SetBoardCount(4);
 
         foreach (PlayerBoard board in boards)
         {
