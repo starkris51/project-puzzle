@@ -31,6 +31,16 @@ public class Grid
     private double _phaseTimer = 0;
     private const double GravityStepDelay = 0.1;
     private const double ClearDelay = 0.4;
+    private const double SpawnDelay = 0.3;
+
+    private bool _spawnPending = false;
+    private double _spawnTimer = 0;
+
+    // true (default): the classic behavior — the next piece only spawns once the board has
+    // fully finished falling and clearing after a placement.
+    // false: the board keeps settling in the background and the next piece spawns a fixed
+    // delay after placement, so pieces can stack up while earlier ones are still falling.
+    public bool WaitForBoardToSettle = true;
 
     public bool IsGameOver => _currentPhase == GridPhase.GameOver;
 
@@ -103,10 +113,10 @@ public class Grid
             }
         }
 
-        // The grid keeps settling on its own, so the placed cells start falling on the
-        // next gravity step. Hand the player a new piece immediately instead of waiting
-        // for the board to come to rest.
-        RequestNewPiece?.Invoke();
+        // The next piece is handed over either once the board settles (see the Settling
+        // case in Update) or after a fixed delay, depending on WaitForBoardToSettle.
+        _spawnPending = true;
+        _spawnTimer = 0;
     }
 
     private bool ApplyGravityOneStep()
@@ -275,6 +285,16 @@ public class Grid
     {
         if (_currentPhase == GridPhase.GameOver) return;
 
+        if (_spawnPending && !WaitForBoardToSettle)
+        {
+            _spawnTimer += gameTime.ElapsedGameTime.TotalSeconds;
+            if (_spawnTimer >= SpawnDelay)
+            {
+                _spawnPending = false;
+                RequestNewPiece?.Invoke();
+            }
+        }
+
         _phaseTimer += gameTime.ElapsedGameTime.TotalSeconds;
 
         switch (_currentPhase)
@@ -298,6 +318,12 @@ public class Grid
                 {
                     _currentPhase = GridPhase.GameOver;
                     OnGameOver?.Invoke();
+                }
+                else if (_spawnPending && WaitForBoardToSettle)
+                {
+                    // The board has come to rest with no matches left to clear.
+                    _spawnPending = false;
+                    RequestNewPiece?.Invoke();
                 }
                 break;
 
@@ -345,6 +371,8 @@ public class Grid
 
         _currentPhase = GridPhase.Settling;
         _phaseTimer = 0;
+        _spawnPending = false;
+        _spawnTimer = 0;
     }
 
     public void Draw(SpriteBatch spriteBatch)

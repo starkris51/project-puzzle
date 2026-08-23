@@ -171,8 +171,8 @@ public class Piece
         if (!_grid.IsValidPosition(x, y, matrix)) return;
 
         // Lock to the bottom of the grid
-        // while (_grid.IsValidPosition(x, y + 1, matrix))
-        //     y++;
+        while (_grid.IsValidPosition(x, y + 1, matrix))
+            y++;
 
         _grid.PlacePiece(x, y, matrix);
         IsLocked = true;
