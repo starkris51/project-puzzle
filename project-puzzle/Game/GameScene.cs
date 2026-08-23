@@ -5,31 +5,77 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
+public class PlayerBoard
+{
+    public required Grid Grid;
+    public readonly List<Piece> Pieces = [];
+}
+
 public class GameScene(ContentManager content) : IScene
 {
-    private readonly ContentManager _content = content;
+    private const int ScreenWidth = 960;
+    private const int ScreenHeight = 540;
 
-    private Grid grid = null!;
+    // Margins reserved around each board's viewport for that player's UI. A single
+    // board gets a bit of breathing room; splitting the screen for multiple boards
+    // reserves more (top especially) so each board's UI doesn't collide with its grid.
+    private static readonly GridMargins SingleBoardMargins = new(top: 40, bottom: 20, left: 20, right: 20);
+    private static readonly GridMargins MultiBoardMargins = new(top: 90, bottom: 30, left: 30, right: 30);
+
+    private readonly ContentManager _content = content;
     private Texture2D tileset = null!;
 
-    private readonly List<Piece> pieces = [];
+    private readonly List<PlayerBoard> boards = [];
 
-    private void SpawnPiece()
-    {
-        pieces.Add(new Piece(tileset, grid));
-    }
+    // Number of boards to lay out on screen. This only controls layout (1 = single
+    // board centered, 2 = boards placed left/right for a 1v1 layout) — it does not
+    // wire up separate input or any actual multiplayer logic.
+    public int BoardCount { get; private set; } = 1;
 
     public void Load()
     {
         tileset = _content.Load<Texture2D>("TilesetV5");
 
-        grid = new Grid(tileset, 960, 540);
+        CreateBoards();
+    }
 
-        pieces.Clear();
-        SpawnPiece();
+    // Rebuilds the boards for the current BoardCount. Call SetBoardCount first to change
+    // the layout (e.g. switching from single-player to a 1v1 layout).
+    private void CreateBoards()
+    {
+        boards.Clear();
 
-        grid.OnGameOver += Restart;
-        grid.RequestNewPiece += SpawnPiece;
+        GridMargins margins = BoardCount > 1 ? MultiBoardMargins : SingleBoardMargins;
+        Rectangle[] viewports = BoardLayout.GetViewports(BoardCount, ScreenWidth, ScreenHeight);
+
+        foreach (Rectangle viewport in viewports)
+        {
+            var board = new PlayerBoard { Grid = new Grid(tileset, viewport, margins) };
+            boards.Add(board);
+
+            board.Grid.OnGameOver += () => Restart(board);
+            board.Grid.RequestNewPiece += () => SpawnPiece(board);
+
+            SpawnPiece(board);
+        }
+    }
+
+    public void SetBoardCount(int count)
+    {
+        BoardCount = count;
+        if (tileset != null) CreateBoards();
+    }
+
+    private void SpawnPiece(PlayerBoard board)
+    {
+        board.Pieces.Add(new Piece(tileset, board.Grid));
+    }
+
+    private void Restart(PlayerBoard board)
+    {
+        board.Grid.Reset();
+        board.Pieces.Clear();
+        SpawnPiece(board);
     }
 
     public void Unload()
@@ -38,36 +84,41 @@ public class GameScene(ContentManager content) : IScene
         _content.Unload();
     }
 
-    private void Restart()
-    {
-        grid.Reset();
-        pieces.Clear();
-        SpawnPiece();
-    }
-
     public void Update(GameTime gameTime)
     {
         KeyboardInfo.Update();
-        grid?.Update(gameTime);
 
-        if (grid?.IsGameOver ?? true) return;
+        // Temporary dev toggle for exercising the layout system before real UI/menu
+        // flow exists to pick a mode.
+        if (KeyboardInfo.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.D1)) SetBoardCount(1);
+        if (KeyboardInfo.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.D2)) SetBoardCount(2);
 
-        // Walk backwards over the pieces that existed at the start of the frame: locking a
-        // piece spawns its replacement at the end of the list, which must not be updated
-        // again this frame.
-        for (int i = pieces.Count - 1; i >= 0; i--)
+        foreach (PlayerBoard board in boards)
         {
-            Piece p = pieces[i];
-            p.Update(gameTime);
-            if (p.IsLocked) pieces.RemoveAt(i);
+            board.Grid.Update(gameTime);
+
+            if (board.Grid.IsGameOver) continue;
+
+            // Walk backwards over the pieces that existed at the start of the frame: locking a
+            // piece spawns its replacement at the end of the list, which must not be updated
+            // again this frame.
+            for (int i = board.Pieces.Count - 1; i >= 0; i--)
+            {
+                Piece p = board.Pieces[i];
+                p.Update(gameTime);
+                if (p.IsLocked) board.Pieces.RemoveAt(i);
+            }
         }
     }
 
     public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
     {
-        grid?.Draw(spriteBatch);
+        foreach (PlayerBoard board in boards)
+        {
+            board.Grid.Draw(spriteBatch);
 
-        foreach (Piece p in pieces)
-            p.Draw(spriteBatch);
+            foreach (Piece p in board.Pieces)
+                p.Draw(spriteBatch);
+        }
     }
 }

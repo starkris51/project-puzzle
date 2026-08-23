@@ -10,20 +10,33 @@ public enum GridPhase
     GameOver
 }
 
+public readonly struct GridMargins(int top, int bottom, int left, int right)
+{
+    public int Top { get; } = top;
+    public int Bottom { get; } = bottom;
+    public int Left { get; } = left;
+    public int Right { get; } = right;
+
+    public static readonly GridMargins None = new(0, 0, 0, 0);
+}
+
 public class Grid
 {
     public int Width = 8;
     public int Height = 14;
 
-    public int CellSize = 32;
+    public int CellSize { get; private set; } = 32;
 
-    private readonly int _screenWidth;
-    private readonly int _screenHeight;
+    private Rectangle _viewport;
+    private GridMargins _margins;
 
     public int AmountToClear { get; private set; } = 3;
 
-    public int OffsetX => (_screenWidth - Width * CellSize) / 2;
-    public int OffsetY => (_screenHeight - Height * CellSize) / 2;
+    private int ContentWidth => _viewport.Width - _margins.Left - _margins.Right;
+    private int ContentHeight => _viewport.Height - _margins.Top - _margins.Bottom;
+
+    public int OffsetX => _viewport.X + _margins.Left + (ContentWidth - Width * CellSize) / 2;
+    public int OffsetY => _viewport.Y + _margins.Top + (ContentHeight - Height * CellSize) / 2;
 
     private readonly Texture2D _texture;
 
@@ -51,15 +64,23 @@ public class Grid
 
     public Cell[,] Cells { get; set; }
 
-    public Grid(Texture2D texture, int screenWidth, int screenHeight)
+    public Grid(Texture2D texture, Rectangle viewport, GridMargins margins = default)
     {
         _texture = texture;
 
-        _screenWidth = screenWidth;
-        _screenHeight = screenHeight;
-
         cells = new Cell[Width, Height];
+        SetViewport(viewport, margins);
         Reset();
+    }
+
+    // Re-fits this grid into a new viewport/margin pair, recomputing the largest cell
+    // size that still fits the board (plus reserved UI space) inside it. Lets a layout
+    // change (e.g. player count changing) resize an existing grid instead of recreating it.
+    public void SetViewport(Rectangle viewport, GridMargins margins = default)
+    {
+        _viewport = viewport;
+        _margins = margins;
+        CellSize = Math.Max(1, Math.Min(ContentWidth / Width, ContentHeight / Height));
     }
 
     public bool IsCellEmpty(int x, int y)
