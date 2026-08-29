@@ -1,5 +1,7 @@
 using Microsoft.Xna.Framework.Input;
 
+namespace Core;
+
 public static class KeyboardInfo
 {
     private static KeyboardState _current;

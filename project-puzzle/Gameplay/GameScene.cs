@@ -5,6 +5,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
+namespace Gameplay;
+
 public class PlayerBoard
 {
     public required Grid Grid;

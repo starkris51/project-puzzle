@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+
+namespace Gameplay;
 
 public enum GridPhase
 {

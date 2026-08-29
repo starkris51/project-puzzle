@@ -1,8 +1,11 @@
 
 using System;
+using Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+
+namespace Gameplay;
 
 public enum PieceTypes
 {

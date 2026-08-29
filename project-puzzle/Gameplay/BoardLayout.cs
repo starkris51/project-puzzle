@@ -1,5 +1,7 @@
 using Microsoft.Xna.Framework;
 
+namespace Gameplay;
+
 public static class BoardLayout
 {
     public static Rectangle[] GetViewports(int boardCount, int screenWidth, int screenHeight)

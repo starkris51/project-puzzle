@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
+namespace Gameplay;
+
 public static class CellTexture
 {
     public const int CellSize = 32;
@@ -31,6 +33,7 @@ public enum CellState
     Empty,
     Placeholder,
     Invisible,
+    Blocker,
     Symbol1,
     Symbol2,
     Symbol3
