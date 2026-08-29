@@ -14,15 +14,13 @@ public class PlayerBoard
     public int Score { get; set; } = 0;
 }
 
-public class GameScene(ContentManager content) : IScene
+public class GameScene(ContentManager content, int screenWidth, int screenHeight) : IScene
 {
-    private const int ScreenWidth = 1920;
-    private const int ScreenHeight = 1080;
 
     // Margins reserved around each board's viewport for that player's UI. A single
     // board gets a bit of breathing room; splitting the screen for multiple boards
     // reserves more (top especially) so each board's UI doesn't collide with its grid.
-    private static readonly GridMargins SingleBoardMargins = new(top: 90, bottom: 40, left: 40, right: 40);
+    private static readonly GridMargins SingleBoardMargins = new(top: 140, bottom: 40, left: 40, right: 40);
     private static readonly GridMargins MultiBoardMargins = new(top: 180, bottom: 60, left: 60, right: 60);
 
     private readonly ContentManager _content = content;
@@ -49,7 +47,7 @@ public class GameScene(ContentManager content) : IScene
         boards.Clear();
 
         GridMargins margins = BoardCount > 1 ? MultiBoardMargins : SingleBoardMargins;
-        Rectangle[] viewports = BoardLayout.GetViewports(BoardCount, ScreenWidth, ScreenHeight);
+        Rectangle[] viewports = BoardLayout.GetViewports(BoardCount, screenWidth, screenHeight);
 
         foreach (Rectangle viewport in viewports)
         {

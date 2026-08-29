@@ -11,6 +11,7 @@ public static class CellTexture
 
     public static readonly Rectangle Empty = new(0, 64, 32, 32);
     public static readonly Rectangle Invisible = new(0, 96, 32, 32);
+    public static readonly Rectangle Blocker = new(32, 0, 32, 32);
     public static readonly Rectangle Symbol1 = new(64, 0, 32, 32);
     public static readonly Rectangle Symbol2 = new(96, 0, 32, 32);
     public static readonly Rectangle Symbol3 = new(128, 0, 32, 32);
@@ -73,6 +74,7 @@ public class Cell
         {
             CellState.Empty => CellTexture.Empty,
             CellState.Invisible => CellTexture.Invisible,
+            CellState.Blocker => CellTexture.Blocker,
             CellState.Symbol1 => CellTexture.Symbol1,
             CellState.Symbol2 => CellTexture.Symbol2,
             CellState.Symbol3 => CellTexture.Symbol3,

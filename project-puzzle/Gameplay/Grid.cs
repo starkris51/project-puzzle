@@ -39,7 +39,7 @@ public class Grid
     private int ContentHeight => _viewport.Height - _margins.Top - _margins.Bottom;
 
     public int OffsetX => _viewport.X + _margins.Left + (ContentWidth - Width * CellSize) / 2;
-    public int OffsetY => _viewport.Y + _margins.Top + (ContentHeight - Height * CellSize) / 2;
+    public int OffsetY => _viewport.Y + _margins.Top;
 
     private readonly Texture2D _texture;
 
@@ -91,6 +91,7 @@ public class Grid
         int nativeSize = CellTexture.CellSize;
         int scaleByWidth = ContentWidth / (Width * nativeSize);
         int scaleByHeight = ContentHeight / (Height * nativeSize);
+
         int scale = Math.Max(1, Math.Min(scaleByWidth, scaleByHeight));
 
         CellSize = nativeSize * scale;

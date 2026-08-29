@@ -14,14 +14,16 @@ public class Game1 : Game
     private SceneManager _sceneManager;
 
     private GameScene _gameScene;
-
+    private KeyboardState _previousKeyboardState;
+    private int ScreenWidth = 1920;
+    private int ScreenHeight = 1080;
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
 
-        _scalingWindow = new ScalingWindow(_graphics, Window, 1920, 1080);
+        _scalingWindow = new ScalingWindow(_graphics, Window, ScreenWidth, ScreenHeight);
     }
 
     protected override void Initialize()
@@ -31,7 +33,7 @@ public class Game1 : Game
 
         _sceneManager = new SceneManager();
 
-        _gameScene = new GameScene(Content);
+        _gameScene = new GameScene(Content, ScreenWidth, ScreenHeight);
         _sceneManager.Push(_gameScene);
     }
 
@@ -43,8 +45,15 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+        var keyboardState = Keyboard.GetState();
+
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || keyboardState.IsKeyDown(Keys.Escape))
             Exit();
+
+        if (keyboardState.IsKeyDown(Keys.F11) && !_previousKeyboardState.IsKeyDown(Keys.F11))
+            _scalingWindow.ToggleFullscreen();
+
+        _previousKeyboardState = keyboardState;
 
         _sceneManager.Update(gameTime);
 

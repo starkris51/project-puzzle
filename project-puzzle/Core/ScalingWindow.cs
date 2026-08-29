@@ -22,7 +22,7 @@ public class ScalingWindow
         VirtualHeight = virtualHeight;
 
         _window.AllowUserResizing = true;
-        _window.ClientSizeChanged += (_, _) => UpdateDestinationRect();
+        _window.ClientSizeChanged += OnClientSizeChanged;
 
         _graphics.PreferredBackBufferWidth = virtualWidth;
         _graphics.PreferredBackBufferHeight = virtualHeight;
@@ -31,6 +31,26 @@ public class ScalingWindow
     public void Initialize()
     {
         _renderTarget = new RenderTarget2D(_graphics.GraphicsDevice, VirtualWidth, VirtualHeight);
+        UpdateDestinationRect();
+    }
+
+    public void ToggleFullscreen()
+    {
+        if (_graphics.IsFullScreen)
+        {
+            _graphics.IsFullScreen = false;
+            _graphics.PreferredBackBufferWidth = VirtualWidth;
+            _graphics.PreferredBackBufferHeight = VirtualHeight;
+        }
+        else
+        {
+            DisplayMode displayMode = _graphics.GraphicsDevice.Adapter.CurrentDisplayMode;
+            _graphics.PreferredBackBufferWidth = displayMode.Width;
+            _graphics.PreferredBackBufferHeight = displayMode.Height;
+            _graphics.IsFullScreen = true;
+        }
+
+        _graphics.ApplyChanges();
         UpdateDestinationRect();
     }
 
@@ -56,17 +76,34 @@ public class ScalingWindow
         return new Vector2(x, y);
     }
 
+    private void OnClientSizeChanged(object sender, EventArgs e)
+    {
+        if (_graphics.IsFullScreen) return;
+
+        int width = _window.ClientBounds.Width;
+        int height = _window.ClientBounds.Height;
+
+        if (width <= 0 || height <= 0) return;
+        if (width == _graphics.PreferredBackBufferWidth && height == _graphics.PreferredBackBufferHeight) return;
+
+        _graphics.PreferredBackBufferWidth = width;
+        _graphics.PreferredBackBufferHeight = height;
+        _graphics.ApplyChanges();
+
+        UpdateDestinationRect();
+    }
+
     private void UpdateDestinationRect()
     {
         int windowWidth = _graphics.GraphicsDevice.PresentationParameters.BackBufferWidth;
         int windowHeight = _graphics.GraphicsDevice.PresentationParameters.BackBufferHeight;
 
-        int scale = Math.Max(1, Math.Min(
-            windowWidth / VirtualWidth,
-            windowHeight / VirtualHeight));
+        float scale = Math.Min(
+            (float)windowWidth / VirtualWidth,
+            (float)windowHeight / VirtualHeight);
 
-        int scaledWidth = VirtualWidth * scale;
-        int scaledHeight = VirtualHeight * scale;
+        int scaledWidth = (int)(VirtualWidth * scale);
+        int scaledHeight = (int)(VirtualHeight * scale);
 
         _destinationRect = new Rectangle(
             (windowWidth - scaledWidth) / 2,
