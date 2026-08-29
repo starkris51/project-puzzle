@@ -9,6 +9,7 @@ public class PlayerBoard
 {
     public required Grid Grid;
     public readonly List<Piece> Pieces = [];
+    public int Score { get; set; } = 0;
 }
 
 public class GameScene(ContentManager content) : IScene
@@ -19,7 +20,7 @@ public class GameScene(ContentManager content) : IScene
     // Margins reserved around each board's viewport for that player's UI. A single
     // board gets a bit of breathing room; splitting the screen for multiple boards
     // reserves more (top especially) so each board's UI doesn't collide with its grid.
-    private static readonly GridMargins SingleBoardMargins = new(top: 80, bottom: 40, left: 40, right: 40);
+    private static readonly GridMargins SingleBoardMargins = new(top: 90, bottom: 40, left: 40, right: 40);
     private static readonly GridMargins MultiBoardMargins = new(top: 180, bottom: 60, left: 60, right: 60);
 
     private readonly ContentManager _content = content;
@@ -91,7 +92,9 @@ public class GameScene(ContentManager content) : IScene
         // Temporary dev toggle for exercising the layout system before real UI/menu
         // flow exists to pick a mode.
         if (KeyboardInfo.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.D1)) SetBoardCount(1);
-        if (KeyboardInfo.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.D2)) SetBoardCount(4);
+        if (KeyboardInfo.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.D2)) SetBoardCount(2);
+        if (KeyboardInfo.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.D3)) SetBoardCount(3);
+        if (KeyboardInfo.WasKeyJustPressed(Microsoft.Xna.Framework.Input.Keys.D4)) SetBoardCount(4);
 
         foreach (PlayerBoard board in boards)
         {
